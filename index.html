@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voice Card Game Prototype v2</title>
+  <style>
+    :root {
+      --bg: #070914;
+      --panel: rgba(255, 255, 255, 0.08);
+      --text: #f7f7ff;
+      --muted: #aeb4c8;
+      --accent: #ffe86b;
+      --danger: #ff7777;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 50% 15%, rgba(75, 90, 255, 0.28), transparent 40%),
+        linear-gradient(180deg, #111631 0%, var(--bg) 60%, #03040a 100%);
+    }
+
+    .game {
+      width: min(1100px, 94vw);
+      margin: 0 auto;
+      padding: 20px 0;
+    }
+
+    .arena {
+      position: relative;
+      height: min(64svh, 680px);
+      min-height: 440px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(110, 130, 255, 0.25), transparent 36%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.1));
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+    }
+
+    .sky {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(transparent 0 65%, rgba(255,255,255,0.04) 65% 66%, transparent 66%),
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,0.15), transparent 12%),
+        radial-gradient(circle at 80% 12%, rgba(255,255,255,0.10), transparent 16%);
+    }
+
+    .card {
+      position: absolute;
+      width: min(220px, 42vw);
+      aspect-ratio: 2.5 / 3.5;
+      border-radius: 18px;
+      padding: 20px;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.24), rgba(255,255,255,0.05)),
+        rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(10px);
+      display: grid;
+      align-content: space-between;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+    }
+
+    .enemy-card {
+      top: 10%;
+      left: 50%;
+      translate: -50% 0;
+    }
+
+    .player-card {
+      bottom: 8%;
+      left: 50%;
+      translate: -50% 0;
+    }
+
+    .card-title {
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .hp {
+      color: var(--muted);
+      font-size: clamp(16px, 2vw, 22px);
+    }
+
+    .effect-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .lightning {
+      position: absolute;
+      left: 50%;
+      top: 0%;
+      width: 18px;
+      height: 68%;
+      translate: -50% 0;
+      filter: drop-shadow(0 0 14px white) drop-shadow(0 0 30px #7ee7ff);
+      animation: flash 680ms ease-out forwards;
+    }
+
+    .lightning::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      clip-path: polygon(
+        50% 0%,
+        72% 30%,
+        55% 30%,
+        85% 70%,
+        57% 58%,
+        44% 100%,
+        34% 55%,
+        16% 58%,
+        42% 28%,
+        28% 28%
+      );
+    }
+
+    .shock {
+      position: absolute;
+      left: 50%;
+      top: 32%;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.95);
+      border-radius: 50%;
+      translate: -50% -50%;
+      animation: shockwave 680ms ease-out forwards;
+    }
+
+    .hit { animation: hitshake 420ms ease-out; }
+
+    .panel {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      background: var(--panel);
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      margin: 0 8px 8px 0;
+      color: #080912;
+      background: var(--accent);
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #status { margin: 8px 0 4px; }
+
+    .heard, .hint, .debug {
+      margin: 4px 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .warning {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; transform: scaleY(0.2); }
+      12% { opacity: 1; transform: scaleY(1); }
+      22% { opacity: 0.18; }
+      34% { opacity: 1; }
+      100% { opacity: 0; transform: scaleY(1.08); }
+    }
+
+    @keyframes shockwave {
+      0% { opacity: 1; width: 10px; height: 10px; }
+      100% { opacity: 0; width: min(520px, 82vw); height: min(520px, 82vw); }
+    }
+
+    @keyframes hitshake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-18px) rotate(-2deg); }
+      42% { transform: translateX(14px) rotate(2deg); }
+      65% { transform: translateX(-8px) rotate(-1deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <section class="arena" id="arena">
+      <div class="sky"></div>
+
+      <div class="card enemy-card">
+        <div class="card-title">Enemy</div>
+        <div class="hp">HP <span id="enemyHp">100</span></div>
+      </div>
+
+      <div class="effect-layer" id="effectLayer" aria-hidden="true"></div>
+
+      <div class="card player-card">
+        <div class="card-title">Player</div>
+        <div class="hp">Voice command: <strong>攻撃！</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <button id="startBtn">マイク開始</button>
+      <button id="stopBtn" disabled>停止</button>
+      <button id="testBtn">テスト攻撃</button>
+      <p id="status">読み込み完了。まず「テスト攻撃」で演出確認、その後「マイク開始」を押してください。</p>
+      <p class="heard">認識: <span id="heardText">---</span></p>
+      <p class="debug" id="debugInfo"></p>
+      <p class="hint">
+        音声認識はChrome / EdgeなどChromium系ブラウザ推奨です。GitHub PagesなどのHTTPS上で開くと安定します。
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const testBtn = document.getElementById("testBtn");
+    const statusEl = document.getElementById("status");
+    const heardText = document.getElementById("heardText");
+    const effectLayer = document.getElementById("effectLayer");
+    const enemyCard = document.querySelector(".enemy-card");
+    const enemyHpEl = document.getElementById("enemyHp");
+    const debugInfo = document.getElementById("debugInfo");
+
+    let recognition = null;
+    let audioCtx = null;
+    let enemyHp = 100;
+    let listening = false;
+
+    function isGoodOriginForMic() {
+      return location.protocol === "https:" ||
+             location.hostname === "localhost" ||
+             location.hostname === "127.0.0.1";
+    }
+
+    function updateDebug() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const parts = [
+        `URL: ${location.protocol}`,
+        `isSecureContext: ${window.isSecureContext}`,
+        `SpeechRecognition: ${SpeechRecognition ? "あり" : "なし"}`
+      ];
+
+      if (!isGoodOriginForMic()) {
+        parts.push("注意: content:// や通常のローカルファイルから開くと、マイク許可や音声認識が動かないことがあります。GitHub Pagesで開いてください。");
+        debugInfo.classList.add("warning");
+      }
+
+      debugInfo.textContent = parts.join(" / ");
+    }
+
+    function getSpeechRecognition() {
+      return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    }
+
+    function setupRecognition() {
+      const SpeechRecognition = getSpeechRecognition();
+
+      if (!SpeechRecognition) {
+        statusEl.textContent = "このブラウザはSpeechRecognitionに未対応です。Chrome系ブラウザで試してください。";
+        startBtn.disabled = true;
+        return null;
+      }
+
+      const rec = new SpeechRecognition();
+      rec.lang = "ja-JP";
+      rec.continuous = true;
+      rec.interimResults = true;
+
+      rec.onstart = () => {
+        listening = true;
+        statusEl.textContent = "聞き取り中。「攻撃」と言ってください。";
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      };
+
+      rec.onend = () => {
+        listening = false;
+        statusEl.textContent = "停止しました。もう一度使う場合は「マイク開始」を押してください。";
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      };
+
+      rec.onerror = (event) => {
+        listening = false;
+        const help = event.error === "not-allowed"
+          ? "マイク許可が拒否されています。Chromeのサイト設定でマイクを許可してください。"
+          : event.error === "network"
+          ? "ネットワークエラーです。Chromeの音声認識はオンライン処理になることがあります。"
+          : "URLの開き方、ブラウザ、マイク権限を確認してください。";
+        statusEl.textContent = `音声認識エラー: ${event.error}。${help}`;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      };
+
+      rec.onresult = (event) => {
+        const last = event.results[event.results.length - 1];
+        const transcript = last[0].transcript.trim();
+        heardText.textContent = transcript;
+
+        const normalized = transcript.replace(/\s/g, "");
+        if (normalized.includes("攻撃") || normalized.includes("こうげき")) {
+          triggerAttack();
+        }
+      };
+
+      return rec;
+    }
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playThunder() {
+      const ctx = ensureAudioContext();
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.exponentialRampToValueAtTime(28, now + 0.55);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.9, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.0);
+
+      const duration = 0.55;
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+      }
+
+      const noise = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const noiseGain = ctx.createGain();
+
+      noise.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = 900;
+      filter.Q.value = 0.8;
+      noiseGain.gain.setValueAtTime(0.0001, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.45, now + 0.02);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      noise.connect(filter).connect(noiseGain).connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + duration);
+    }
+
+    function showLightning() {
+      const lightning = document.createElement("div");
+      lightning.className = "lightning";
+      const shock = document.createElement("div");
+      shock.className = "shock";
+
+      effectLayer.appendChild(lightning);
+      effectLayer.appendChild(shock);
+
+      enemyCard.classList.remove("hit");
+      void enemyCard.offsetWidth;
+      enemyCard.classList.add("hit");
+
+      setTimeout(() => {
+        lightning.remove();
+        shock.remove();
+      }, 750);
+    }
+
+    let attackCooldown = false;
+    function triggerAttack() {
+      if (attackCooldown) return;
+      attackCooldown = true;
+      setTimeout(() => (attackCooldown = false), 900);
+
+      enemyHp = Math.max(0, enemyHp - 10);
+      enemyHpEl.textContent = enemyHp;
+
+      playThunder();
+      showLightning();
+
+      statusEl.textContent = "攻撃発動！";
+    }
+
+    startBtn.addEventListener("click", () => {
+      ensureAudioContext();
+
+      if (!isGoodOriginForMic()) {
+        statusEl.textContent = "この開き方では音声認識が動かない可能性が高いです。GitHub PagesなどHTTPSのURLで開いてください。";
+      }
+
+      recognition = recognition || setupRecognition();
+      try {
+        recognition?.start();
+      } catch (e) {
+        statusEl.textContent = `音声認識を開始できません: ${e.message}`;
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      recognition?.stop();
+    });
+
+    testBtn.addEventListener("click", () => {
+      triggerAttack();
+    });
+
+    updateDebug();
+    setupRecognition();
+  </script>
+</body>
+</html>
