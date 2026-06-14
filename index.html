@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>冥府の先導者 - Attack Motion</title>
+  <title>冥府の先導者 - Attack Motion v6</title>
   <style>
     :root {
       --ui-bg: rgba(0, 0, 0, 0.50);
@@ -185,7 +185,7 @@
   </main>
 
   <section class="controls show" id="controls">
-    <div class="status" id="status">マイク開始 → 「攻撃！」 / まず攻撃ボタンで確認</div>
+    <div class="status" id="status">v6：動画中はマイクを強制ロックします</div>
     <button id="startBtn">マイク</button>
     <button id="stopBtn" disabled>停止</button>
     <button id="testBtn">攻撃</button>
@@ -213,7 +213,14 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     let recognition = null;
-    let shouldListen = false;
+    let wantMicOn = false;
+    let isListening = false;
+
+    // これが今回の要：trueの間は、絶対に音声認識を開始しない
+    let micHardLocked = false;
+    let restartTimer = null;
+
+    let isVideoPlaying = false;
     let audioCtx = null;
     let mirror = 1;
     let fitMode = 0;
@@ -221,6 +228,18 @@
     function setStatus(text, danger = false) {
       statusEl.textContent = text;
       statusEl.className = danger ? "status danger" : "status";
+    }
+
+    function updateButtons() {
+      // ロック中・動画中は停止ボタンをアクティブにしない
+      if (micHardLocked || isVideoPlaying) {
+        startBtn.disabled = true;
+        stopBtn.disabled = true;
+        return;
+      }
+
+      startBtn.disabled = isListening;
+      stopBtn.disabled = !isListening;
     }
 
     function ensureAudio() {
@@ -244,30 +263,122 @@
       osc.connect(gain).connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.85);
-
-      const dur = 0.35;
-      const n = Math.floor(ctx.sampleRate * dur);
-      const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < n; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
-      }
-      const src = ctx.createBufferSource();
-      const filter = ctx.createBiquadFilter();
-      const ngain = ctx.createGain();
-      src.buffer = buffer;
-      filter.type = "bandpass";
-      filter.frequency.value = 780;
-      filter.Q.value = 0.75;
-      ngain.gain.setValueAtTime(0.001, now);
-      ngain.gain.exponentialRampToValueAtTime(0.22, now + 0.018);
-      ngain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      src.connect(filter).connect(ngain).connect(ctx.destination);
-      src.start(now);
-      src.stop(now + dur);
     }
 
-    async function playAttack() {
+    function createRecognition() {
+      if (!SpeechRecognition) {
+        setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
+        startBtn.disabled = true;
+        return null;
+      }
+
+      const rec = new SpeechRecognition();
+      rec.lang = "ja-JP";
+      rec.continuous = true;
+      rec.interimResults = true;
+
+      rec.onstart = () => {
+        // ロック中に勝手に開始された場合、即座に中止する
+        if (micHardLocked || isVideoPlaying) {
+          try { rec.abort(); } catch (e) {}
+          isListening = false;
+          updateButtons();
+          return;
+        }
+
+        isListening = true;
+        setStatus("聞き取り中：「攻撃！」");
+        updateButtons();
+      };
+
+      rec.onend = () => {
+        isListening = false;
+        updateButtons();
+
+        // ロック中・動画中は絶対に再開しない
+        if (micHardLocked || isVideoPlaying) {
+          setStatus("動画再生中：マイク強制停止");
+          return;
+        }
+
+        // 通常時だけ自動再開
+        if (wantMicOn) {
+          clearTimeout(restartTimer);
+          restartTimer = setTimeout(startMicSafely, 600);
+        } else {
+          setStatus("停止中");
+        }
+      };
+
+      rec.onerror = (e) => {
+        isListening = false;
+        updateButtons();
+
+        if (micHardLocked || isVideoPlaying) {
+          return;
+        }
+
+        setStatus("音声認識エラー：" + e.error + "。Chromeのマイク許可を確認してください。", true);
+      };
+
+      rec.onresult = (event) => {
+        if (micHardLocked || isVideoPlaying) return;
+
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript.trim();
+        const normalized = text.replace(/\s/g, "");
+        setStatus("認識：" + text);
+
+        if (
+          normalized.includes("攻撃") ||
+          normalized.includes("こうげき") ||
+          normalized.toLowerCase().includes("attack")
+        ) {
+          playAttackFromVoice();
+        }
+      };
+
+      return rec;
+    }
+
+    function startMicSafely() {
+      if (!wantMicOn || micHardLocked || isVideoPlaying) {
+        updateButtons();
+        return;
+      }
+
+      recognition = recognition || createRecognition();
+      if (!recognition) return;
+
+      try {
+        recognition.start();
+      } catch (e) {
+        // すでに開始中などは無視
+      }
+      updateButtons();
+    }
+
+    function abortMicHard() {
+      clearTimeout(restartTimer);
+
+      isListening = false;
+      micHardLocked = true;
+      updateButtons();
+
+      if (recognition) {
+        try { recognition.abort(); } catch (e) {}
+        try { recognition.stop(); } catch (e) {}
+      }
+
+      setStatus("攻撃認識：動画中はマイク完全停止");
+    }
+
+    async function playAttackBase() {
+      if (isVideoPlaying) return;
+
+      isVideoPlaying = true;
+      updateButtons();
+
       ensureAudio();
       impactSound();
 
@@ -283,84 +394,67 @@
         await video.play();
         setStatus("攻撃発動：冥府の先導者");
       } catch (e) {
+        isVideoPlaying = false;
+        stage.classList.remove("playing");
+        micHardLocked = false;
+        updateButtons();
         setStatus("動画再生できません。画面を一度タップしてから再試行してください。", true);
       }
     }
 
-    video.addEventListener("ended", () => {
-      stage.classList.remove("playing");
-      setStatus(shouldListen ? "聞き取り中：「攻撃！」" : "待機中");
-    });
-
-    function createRecognition() {
-      if (!SpeechRecognition) {
-        setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
-        startBtn.disabled = true;
-        return null;
-      }
-
-      const rec = new SpeechRecognition();
-      rec.lang = "ja-JP";
-      rec.continuous = true;
-      rec.interimResults = true;
-
-      rec.onstart = () => {
-        setStatus("聞き取り中：「攻撃！」");
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-      };
-
-      rec.onend = () => {
-        stopBtn.disabled = true;
-        startBtn.disabled = false;
-        if (shouldListen) {
-          setTimeout(() => {
-            try { rec.start(); } catch (e) {}
-          }, 350);
-        } else {
-          setStatus("停止中");
-        }
-      };
-
-      rec.onerror = (e) => {
-        setStatus("音声認識エラー：" + e.error + "。Chromeのマイク許可を確認してください。", true);
-      };
-
-      rec.onresult = (event) => {
-        const result = event.results[event.results.length - 1];
-        const text = result[0].transcript.trim();
-        const normalized = text.replace(/\s/g, "");
-        setStatus("認識：" + text);
-
-        if (
-          normalized.includes("攻撃") ||
-          normalized.includes("こうげき") ||
-          normalized.toLowerCase().includes("attack")
-        ) {
-          playAttack();
-        }
-      };
-
-      return rec;
+    function playAttackFromVoice() {
+      // 音声認識から攻撃した時だけ、強制ロック
+      abortMicHard();
+      playAttackBase();
     }
+
+    function playAttackFromButton() {
+      // ボタン攻撃はマイクを触らない
+      playAttackBase();
+    }
+
+    video.addEventListener("ended", () => {
+      isVideoPlaying = false;
+      stage.classList.remove("playing");
+
+      // 動画終了後もしばらく待ってからマイクロック解除
+      setStatus("動画終了：1.5秒後にマイク再開");
+      clearTimeout(restartTimer);
+
+      restartTimer = setTimeout(() => {
+        micHardLocked = false;
+        updateButtons();
+
+        if (wantMicOn) {
+          setStatus("マイク再開中...");
+          startMicSafely();
+        } else {
+          setStatus("待機中");
+        }
+      }, 1500);
+    });
 
     startBtn.addEventListener("click", () => {
       ensureAudio();
-      shouldListen = true;
-      recognition = recognition || createRecognition();
-      try {
-        recognition && recognition.start();
-      } catch (e) {
-        setStatus("開始できません：" + e.message, true);
-      }
+      wantMicOn = true;
+      micHardLocked = false;
+      startMicSafely();
     });
 
     stopBtn.addEventListener("click", () => {
-      shouldListen = false;
-      recognition && recognition.stop();
+      wantMicOn = false;
+      micHardLocked = false;
+      clearTimeout(restartTimer);
+      if (recognition) {
+        try { recognition.abort(); } catch (e) {}
+        try { recognition.stop(); } catch (e) {}
+      }
+      isListening = false;
+      updateButtons();
+      setStatus("停止中");
     });
 
-    testBtn.addEventListener("click", playAttack);
+    testBtn.addEventListener("click", playAttackFromButton);
 
     fullBtn.addEventListener("click", async () => {
       try {
@@ -415,6 +509,8 @@
     if (!window.isSecureContext) {
       setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。", true);
     }
+
+    updateButtons();
   </script>
 </body>
 </html>
