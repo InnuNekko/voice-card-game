@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>冥府の先導者 - Attack Motion v5</title>
+  <style>
+    :root {
+      --ui-bg: rgba(0, 0, 0, 0.50);
+      --ui-border: rgba(255, 255, 255, 0.18);
+      --text: #f7f3e8;
+      --muted: #cfc6b4;
+      --accent: #b78cff;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: manipulation;
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(85, 35, 130, 0.25), transparent 34%),
+        #000;
+    }
+
+    video {
+      width: 100vw;
+      height: 100svh;
+      object-fit: var(--fit, contain);
+      opacity: 0;
+      transform: scale(var(--zoom, 1)) scaleX(var(--mirror, 1));
+      filter: contrast(1.05) brightness(1.06) saturate(1.03);
+      transition: opacity 100ms ease;
+      background: #000;
+    }
+
+    .stage.playing video {
+      opacity: 1;
+    }
+
+    .idle-title {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0.78;
+      transition: opacity 160ms ease;
+    }
+
+    .stage.playing .idle-title {
+      opacity: 0;
+    }
+
+    .idle-title h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 8vw, 76px);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 28px rgba(190, 130, 255, 0.75);
+    }
+
+    .idle-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(14px, 3.3vw, 22px);
+    }
+
+    .flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.78), transparent 15%),
+        radial-gradient(circle at 50% 42%, rgba(160, 90, 255, 0.70), transparent 38%);
+    }
+
+    .flash.active {
+      animation: flash 520ms ease-out;
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      10% { opacity: 0.90; }
+      24% { opacity: 0.12; }
+      38% { opacity: 0.55; }
+      100% { opacity: 0; }
+    }
+
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(96vw, 820px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 7px;
+      border-radius: 999px;
+      border: 1px solid var(--ui-border);
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      opacity: 0.42;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 5;
+    }
+
+    .controls:focus-within,
+    .controls.show {
+      opacity: 1;
+    }
+
+    .controls.hidden {
+      opacity: 0.05;
+      transform: translateX(-50%) translateY(18px);
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #120d18;
+      background: linear-gradient(180deg, #e7d4ff, #a978ff);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+    }
+
+    .status {
+      width: 100%;
+      min-height: 1.2em;
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      padding: 0 10px 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .danger {
+      color: #ff9d9d;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <main class="stage" id="stage">
+    <video id="attackVideo" src="./attack_motion.mp4" preload="auto" playsinline webkit-playsinline></video>
+
+    <section class="idle-title" aria-hidden="true">
+      <div>
+        <h1>冥府の先導者</h1>
+        <p>「攻撃！」で攻撃モーション</p>
+      </div>
+    </section>
+
+    <div class="flash" id="flash"></div>
+  </main>
+
+  <section class="controls show" id="controls">
+    <div class="status" id="status">マイク開始 → 「攻撃！」 / 動画中はマイクを自動停止します</div>
+    <button id="startBtn">マイク</button>
+    <button id="stopBtn" disabled>停止</button>
+    <button id="testBtn">攻撃</button>
+    <button id="fullBtn">全画面</button>
+    <button id="mirrorBtn">左右反転</button>
+    <button id="fitBtn">拡大</button>
+    <button id="hideBtn">UI小</button>
+  </section>
+
+  <script>
+    const stage = document.getElementById("stage");
+    const video = document.getElementById("attackVideo");
+    const flash = document.getElementById("flash");
+    const controls = document.getElementById("controls");
+    const statusEl = document.getElementById("status");
+
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const testBtn = document.getElementById("testBtn");
+    const fullBtn = document.getElementById("fullBtn");
+    const mirrorBtn = document.getElementById("mirrorBtn");
+    const fitBtn = document.getElementById("fitBtn");
+    const hideBtn = document.getElementById("hideBtn");
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    let recognition = null;
+    let shouldListen = false;
+    let isListening = false;
+    let isVideoPlaying = false;
+    let restartMicAfterVideo = false;
+
+    let audioCtx = null;
+    let mirror = 1;
+    let fitMode = 0;
+
+    function setStatus(text, danger = false) {
+      statusEl.textContent = text;
+      statusEl.className = danger ? "status danger" : "status";
+    }
+
+    function ensureAudio() {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function impactSound() {
+      const ctx = ensureAudio();
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(88, now);
+      osc.frequency.exponentialRampToValueAtTime(28, now + 0.55);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.48, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.85);
+
+      const dur = 0.35;
+      const n = Math.floor(ctx.sampleRate * dur);
+      const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < n; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+      }
+      const src = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const ngain = ctx.createGain();
+      src.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = 780;
+      filter.Q.value = 0.75;
+      ngain.gain.setValueAtTime(0.001, now);
+      ngain.gain.exponentialRampToValueAtTime(0.22, now + 0.018);
+      ngain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(filter).connect(ngain).connect(ctx.destination);
+      src.start(now);
+      src.stop(now + dur);
+    }
+
+    function stopMicForVideo() {
+      if (!recognition || !isListening) return;
+
+      restartMicAfterVideo = shouldListen;
+      setStatus("攻撃認識。動画中はマイクを一時停止します。");
+
+      try {
+        recognition.stop();
+      } catch (e) {
+        // すでに止まっている場合は無視
+      }
+    }
+
+    function restartMicIfNeeded() {
+      if (!shouldListen || !restartMicAfterVideo || !recognition) return;
+
+      restartMicAfterVideo = false;
+
+      setTimeout(() => {
+        if (!shouldListen || isVideoPlaying) return;
+
+        try {
+          recognition.start();
+        } catch (e) {
+          setStatus("マイク再開に失敗しました。必要ならマイクボタンを押してください。", true);
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        }
+      }, 700);
+    }
+
+    async function playAttack() {
+      if (isVideoPlaying) return;
+
+      isVideoPlaying = true;
+      stopMicForVideo();
+
+      ensureAudio();
+      impactSound();
+
+      flash.classList.remove("active");
+      void flash.offsetWidth;
+      flash.classList.add("active");
+
+      stage.classList.add("playing");
+      video.pause();
+      video.currentTime = 0;
+
+      try {
+        await video.play();
+        setStatus("攻撃発動：冥府の先導者");
+      } catch (e) {
+        isVideoPlaying = false;
+        stage.classList.remove("playing");
+        setStatus("動画再生できません。画面を一度タップしてから再試行してください。", true);
+        restartMicIfNeeded();
+      }
+    }
+
+    video.addEventListener("ended", () => {
+      isVideoPlaying = false;
+      stage.classList.remove("playing");
+
+      if (shouldListen && restartMicAfterVideo) {
+        setStatus("動画終了。マイクを再開します。");
+        restartMicIfNeeded();
+      } else {
+        setStatus(shouldListen ? "聞き取り中：「攻撃！」" : "待機中");
+      }
+    });
+
+    video.addEventListener("pause", () => {
+      // ended直前のpauseは正常なので、ここでは何もしない
+    });
+
+    function createRecognition() {
+      if (!SpeechRecognition) {
+        setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
+        startBtn.disabled = true;
+        return null;
+      }
+
+      const rec = new SpeechRecognition();
+      rec.lang = "ja-JP";
+      rec.continuous = true;
+      rec.interimResults = true;
+
+      rec.onstart = () => {
+        isListening = true;
+        setStatus("聞き取り中：「攻撃！」");
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+      };
+
+      rec.onend = () => {
+        isListening = false;
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+
+        // 動画中はここで自動再開しない。動画終了後に再開する。
+        if (isVideoPlaying) {
+          setStatus("動画再生中：マイク停止中");
+          return;
+        }
+
+        if (shouldListen) {
+          setTimeout(() => {
+            if (!shouldListen || isVideoPlaying) return;
+            try { rec.start(); } catch (e) {}
+          }, 500);
+        } else {
+          setStatus("停止中");
+        }
+      };
+
+      rec.onerror = (e) => {
+        isListening = false;
+
+        // 動画中に止めた時の細かいエラーは無視
+        if (isVideoPlaying) return;
+
+        setStatus("音声認識エラー：" + e.error + "。Chromeのマイク許可を確認してください。", true);
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      };
+
+      rec.onresult = (event) => {
+        // 動画中の認識結果は全部無視
+        if (isVideoPlaying) return;
+
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript.trim();
+        const normalized = text.replace(/\s/g, "");
+        setStatus("認識：" + text);
+
+        if (
+          normalized.includes("攻撃") ||
+          normalized.includes("こうげき") ||
+          normalized.toLowerCase().includes("attack")
+        ) {
+          playAttack();
+        }
+      };
+
+      return rec;
+    }
+
+    startBtn.addEventListener("click", () => {
+      ensureAudio();
+      shouldListen = true;
+      recognition = recognition || createRecognition();
+      try {
+        recognition && recognition.start();
+      } catch (e) {
+        setStatus("開始できません：" + e.message, true);
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      shouldListen = false;
+      restartMicAfterVideo = false;
+      try {
+        recognition && recognition.stop();
+      } catch (e) {}
+    });
+
+    testBtn.addEventListener("click", playAttack);
+
+    fullBtn.addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+          setStatus("全画面モード");
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (e) {
+        setStatus("全画面にできませんでした。", true);
+      }
+    });
+
+    mirrorBtn.addEventListener("click", () => {
+      mirror = mirror === 1 ? -1 : 1;
+      video.style.setProperty("--mirror", mirror);
+      setStatus(mirror === -1 ? "左右反転ON" : "左右反転OFF");
+    });
+
+    fitBtn.addEventListener("click", () => {
+      fitMode = (fitMode + 1) % 3;
+      if (fitMode === 0) {
+        video.style.setProperty("--fit", "contain");
+        video.style.setProperty("--zoom", 1);
+        fitBtn.textContent = "拡大";
+        setStatus("表示：全体表示");
+      } else if (fitMode === 1) {
+        video.style.setProperty("--fit", "cover");
+        video.style.setProperty("--zoom", 1);
+        fitBtn.textContent = "さらに拡大";
+        setStatus("表示：画面いっぱい");
+      } else {
+        video.style.setProperty("--fit", "cover");
+        video.style.setProperty("--zoom", 1.18);
+        fitBtn.textContent = "等倍";
+        setStatus("表示：迫力重視");
+      }
+    });
+
+    hideBtn.addEventListener("click", () => {
+      controls.classList.toggle("hidden");
+      hideBtn.textContent = controls.classList.contains("hidden") ? "UI戻す" : "UI小";
+    });
+
+    document.body.addEventListener("click", (e) => {
+      if (!controls.contains(e.target)) {
+        controls.classList.toggle("show");
+      }
+    });
+
+    if (!window.isSecureContext) {
+      setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。", true);
+    }
+  </script>
+</body>
+</html>
