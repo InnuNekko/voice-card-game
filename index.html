@@ -3,209 +3,225 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>冥府の先導者 3D UltraLight</title>
+  <title>冥府の先導者 - Attack Motion</title>
   <style>
     :root {
-      --ui-bg: rgba(0,0,0,.50);
-      --ui-border: rgba(255,255,255,.18);
-      --text: #f8f0ff;
-      --muted: #cfc0dc;
-      --accent: #c38cff;
+      --ui-bg: rgba(0, 0, 0, 0.50);
+      --ui-border: rgba(255, 255, 255, 0.18);
+      --text: #f7f3e8;
+      --muted: #cfc6b4;
+      --accent: #b78cff;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     html, body {
-      margin: 0; width: 100%; height: 100%; overflow: hidden;
-      background: #000; color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       touch-action: manipulation;
     }
+
     .stage {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
       background:
-        radial-gradient(circle at 50% 38%, rgba(115,35,160,.32), transparent 36%),
-        radial-gradient(circle at 50% 75%, rgba(40,20,80,.42), transparent 38%),
+        radial-gradient(circle at 50% 45%, rgba(85, 35, 130, 0.25), transparent 34%),
         #000;
     }
-    canvas { display: block; width: 100%; height: 100%; }
-    .title {
+
+    video {
+      width: 100vw;
+      height: 100svh;
+      object-fit: var(--fit, contain);
+      opacity: 0;
+      transform: scale(var(--zoom, 1)) scaleX(var(--mirror, 1));
+      filter: contrast(1.05) brightness(1.06) saturate(1.03);
+      transition: opacity 100ms ease;
+      background: #000;
+    }
+
+    .stage.playing video {
+      opacity: 1;
+    }
+
+    .idle-title {
       position: fixed;
-      top: calc(12px + env(safe-area-inset-top));
-      left: 50%;
-      transform: translateX(-50%);
+      inset: 0;
+      display: grid;
+      place-items: center;
       text-align: center;
       pointer-events: none;
-      text-shadow: 0 0 22px #a55cff;
-      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-      letter-spacing: .08em;
-      font-size: clamp(18px, 5vw, 34px);
-      opacity: .90;
+      opacity: 0.78;
+      transition: opacity 160ms ease;
     }
-    .fx {
-      position: fixed; inset: 0; pointer-events: none; opacity: 0;
-      background:
-        radial-gradient(circle at 50% 38%, rgba(255,255,255,.80), transparent 10%),
-        radial-gradient(circle at 50% 45%, rgba(180,70,255,.75), transparent 34%);
-    }
-    .fx.active { animation: flash .7s ease-out; }
-    .slash {
-      position: fixed;
-      left: 50%; top: 44%;
-      width: min(74vw, 520px); height: 18px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, transparent, #fff, #c05cff, transparent);
-      filter: drop-shadow(0 0 12px white) drop-shadow(0 0 28px #bd5cff);
-      transform: translate(-50%,-50%) rotate(-22deg) scaleX(0);
+
+    .stage.playing .idle-title {
       opacity: 0;
-      pointer-events: none;
     }
-    .slash.active { animation: slash .55s ease-out; }
+
+    .idle-title h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 8vw, 76px);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 28px rgba(190, 130, 255, 0.75);
+    }
+
+    .idle-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(14px, 3.3vw, 22px);
+    }
+
+    .flash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.78), transparent 15%),
+        radial-gradient(circle at 50% 42%, rgba(160, 90, 255, 0.70), transparent 38%);
+    }
+
+    .flash.active {
+      animation: flash 520ms ease-out;
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      10% { opacity: 0.90; }
+      24% { opacity: 0.12; }
+      38% { opacity: 0.55; }
+      100% { opacity: 0; }
+    }
+
     .controls {
-      position: fixed; left: 50%;
+      position: fixed;
+      left: 50%;
       bottom: calc(8px + env(safe-area-inset-bottom));
       transform: translateX(-50%);
-      width: min(96vw, 860px);
-      display: flex; align-items: center; justify-content: center;
-      flex-wrap: wrap; gap: 6px; padding: 7px;
+      width: min(96vw, 820px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 7px;
       border-radius: 999px;
       border: 1px solid var(--ui-border);
       background: var(--ui-bg);
       backdrop-filter: blur(10px);
+      opacity: 0.42;
+      transition: opacity 160ms ease, transform 160ms ease;
       z-index: 5;
-      opacity: .52;
-      transition: .16s;
     }
-    .controls:focus-within, .controls.show { opacity: 1; }
-    .controls.hidden { opacity: .05; transform: translateX(-50%) translateY(18px); }
+
+    .controls:focus-within,
+    .controls.show {
+      opacity: 1;
+    }
+
+    .controls.hidden {
+      opacity: 0.05;
+      transform: translateX(-50%) translateY(18px);
+    }
+
     button {
-      border: 0; border-radius: 999px;
+      border: 0;
+      border-radius: 999px;
       padding: 9px 12px;
-      font-size: 12px; font-weight: 900;
-      color: #140b20;
-      background: linear-gradient(180deg, #ead6ff, #aa72ff);
-      box-shadow: 0 4px 14px #0006;
+      font-size: 12px;
+      font-weight: 900;
+      color: #120d18;
+      background: linear-gradient(180deg, #e7d4ff, #a978ff);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
     }
-    button:disabled { opacity: .45; }
+
+    button:disabled {
+      opacity: 0.45;
+    }
+
     .status {
-      width: 100%; min-height: 1.2em;
-      text-align: center; color: var(--muted);
-      font-size: 11px; line-height: 1.25;
+      width: 100%;
+      min-height: 1.2em;
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
       padding: 0 10px 2px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .danger { color: #ff9d9d; font-weight: 800; }
-    @keyframes flash {
-      0%{opacity:0} 8%{opacity:.95} 22%{opacity:.15} 38%{opacity:.65} 100%{opacity:0}
-    }
-    @keyframes slash {
-      0%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(0);opacity:0}
-      15%{opacity:1}
-      65%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1)}
-      100%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1.15);opacity:0}
+
+    .danger {
+      color: #ff9d9d;
+      font-weight: 800;
     }
   </style>
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
 </head>
-
 <body>
-  <main class="stage" id="stage"></main>
-  <div class="title">冥府の先導者 3D 軽量版</div>
-  <div class="fx" id="fx"></div>
-  <div class="slash" id="slash"></div>
+  <main class="stage" id="stage">
+    <video id="attackVideo" src="./attack_motion.mp4" preload="auto" playsinline webkit-playsinline></video>
+
+    <section class="idle-title" aria-hidden="true">
+      <div>
+        <h1>冥府の先導者</h1>
+        <p>「攻撃！」で攻撃モーション</p>
+      </div>
+    </section>
+
+    <div class="flash" id="flash"></div>
+  </main>
 
   <section class="controls show" id="controls">
-    <div class="status" id="status">読み込み中...</div>
+    <div class="status" id="status">マイク開始 → 「攻撃！」 / まず攻撃ボタンで確認</div>
     <button id="startBtn">マイク</button>
     <button id="stopBtn" disabled>停止</button>
-    <button id="attackBtn">攻撃</button>
+    <button id="testBtn">攻撃</button>
     <button id="fullBtn">全画面</button>
     <button id="mirrorBtn">左右反転</button>
-    <button id="zoomBtn">拡大</button>
+    <button id="fitBtn">拡大</button>
     <button id="hideBtn">UI小</button>
   </section>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
+  <script>
     const stage = document.getElementById("stage");
-    const statusEl = document.getElementById("status");
-    const fx = document.getElementById("fx");
-    const slash = document.getElementById("slash");
+    const video = document.getElementById("attackVideo");
+    const flash = document.getElementById("flash");
     const controls = document.getElementById("controls");
+    const statusEl = document.getElementById("status");
 
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
-    const attackBtn = document.getElementById("attackBtn");
+    const testBtn = document.getElementById("testBtn");
     const fullBtn = document.getElementById("fullBtn");
     const mirrorBtn = document.getElementById("mirrorBtn");
-    const zoomBtn = document.getElementById("zoomBtn");
+    const fitBtn = document.getElementById("fitBtn");
     const hideBtn = document.getElementById("hideBtn");
 
-    const MODEL_URL = "./fantasy_knight_ultralite.glb";
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    let model = null;
-    let mixer = null;
-    let idleAction = null;
-    let attackAction = null;
-    let attacking = false;
-    let shouldListen = false;
     let recognition = null;
+    let shouldListen = false;
     let audioCtx = null;
     let mirror = 1;
-    let zoom = 1;
+    let fitMode = 0;
 
     function setStatus(text, danger = false) {
       statusEl.textContent = text;
       statusEl.className = danger ? "status danger" : "status";
     }
-
-    const scene = new THREE.Scene();
-
-    const camera = new THREE.PerspectiveCamera(
-      38,
-      window.innerWidth / window.innerHeight,
-      0.01,
-      100
-    );
-    camera.position.set(0, 1.3, 5.0);
-
-    const renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance"
-    });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    stage.appendChild(renderer.domElement);
-
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x251235, 2.4);
-    scene.add(hemi);
-
-    const key = new THREE.DirectionalLight(0xffffff, 3.2);
-    key.position.set(2.5, 4, 3);
-    scene.add(key);
-
-    const rim = new THREE.DirectionalLight(0xa666ff, 2.2);
-    rim.position.set(-3, 2, -2);
-    scene.add(rim);
-
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(1.75, 96),
-      new THREE.MeshBasicMaterial({ color: 0x5b25a0, transparent: true, opacity: 0.18 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.25;
-    scene.add(ground);
 
     function ensureAudio() {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
@@ -213,23 +229,23 @@
       return audioCtx;
     }
 
-    function thunder() {
+    function impactSound() {
       const ctx = ensureAudio();
       const now = ctx.currentTime;
 
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(72, now);
-      osc.frequency.exponentialRampToValueAtTime(24, now + 0.65);
+      osc.frequency.setValueAtTime(88, now);
+      osc.frequency.exponentialRampToValueAtTime(28, now + 0.55);
       gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.75, now + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+      gain.gain.exponentialRampToValueAtTime(0.48, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
       osc.connect(gain).connect(ctx.destination);
       osc.start(now);
-      osc.stop(now + 1.05);
+      osc.stop(now + 0.85);
 
-      const dur = 0.42;
+      const dur = 0.35;
       const n = Math.floor(ctx.sampleRate * dur);
       const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -238,118 +254,51 @@
       }
       const src = ctx.createBufferSource();
       const filter = ctx.createBiquadFilter();
-      const ng = ctx.createGain();
+      const ngain = ctx.createGain();
       src.buffer = buffer;
       filter.type = "bandpass";
-      filter.frequency.value = 950;
-      ng.gain.setValueAtTime(0.001, now);
-      ng.gain.exponentialRampToValueAtTime(0.38, now + 0.02);
-      ng.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      src.connect(filter).connect(ng).connect(ctx.destination);
+      filter.frequency.value = 780;
+      filter.Q.value = 0.75;
+      ngain.gain.setValueAtTime(0.001, now);
+      ngain.gain.exponentialRampToValueAtTime(0.22, now + 0.018);
+      ngain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(filter).connect(ngain).connect(ctx.destination);
       src.start(now);
       src.stop(now + dur);
     }
 
-    function fitModel(object) {
-      const box = new THREE.Box3().setFromObject(object);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-
-      object.position.sub(center);
-
-      const maxSide = Math.max(size.x, size.y, size.z);
-      const scale = 2.65 / maxSide;
-      object.scale.setScalar(scale);
-
-      // 少し下げて全身が見えるようにする
-      object.position.y -= 0.15;
-      object.rotation.y = Math.PI;
-    }
-
-    const loader = new GLTFLoader();
-    loader.load(
-      MODEL_URL,
-      (gltf) => {
-        model = gltf.scene;
-        fitModel(model);
-        scene.add(model);
-
-        if (gltf.animations && gltf.animations.length > 0) {
-          mixer = new THREE.AnimationMixer(model);
-          idleAction = mixer.clipAction(gltf.animations[0]);
-          idleAction.play();
-          setStatus("3Dモデル読み込み完了。アニメーションあり：" + gltf.animations.length);
-        } else {
-          setStatus("3Dモデル読み込み完了。内蔵アニメなし → Web側で疑似攻撃します。");
-        }
-      },
-      (xhr) => {
-        if (xhr.total) {
-          const pct = Math.round(xhr.loaded / xhr.total * 100);
-          setStatus("3Dモデル読み込み中... " + pct + "%");
-        } else {
-          setStatus("3Dモデル読み込み中...");
-        }
-      },
-      (err) => {
-        console.error(err);
-        setStatus("3Dモデルを読み込めません。fantasy_knight_ultralite.glb が同じ場所にあるか確認してください。", true);
-      }
-    );
-
-    function playFx() {
-      fx.classList.remove("active");
-      slash.classList.remove("active");
-      void fx.offsetWidth;
-      void slash.offsetWidth;
-      fx.classList.add("active");
-      slash.classList.add("active");
-    }
-
-    function attack() {
-      if (!model || attacking) return;
+    async function playAttack() {
       ensureAudio();
-      thunder();
-      playFx();
-      attacking = true;
-      setStatus("攻撃発動：冥府の先導者");
+      impactSound();
 
-      // 内蔵アニメがない場合でも、Web側で攻撃っぽい動きをつける
-      const start = performance.now();
-      const baseZ = model.position.z;
-      const baseY = model.position.y;
-      const baseRotY = model.rotation.y;
+      flash.classList.remove("active");
+      void flash.offsetWidth;
+      flash.classList.add("active");
 
-      function step(now) {
-        const t = Math.min(1, (now - start) / 850);
-        const s = Math.sin(Math.PI * t);
-        model.position.z = baseZ + s * 0.85;
-        model.position.y = baseY + s * 0.18;
-        model.rotation.y = baseRotY + Math.sin(Math.PI * t * 2) * 0.14 * mirror;
-        model.rotation.z = Math.sin(Math.PI * t) * -0.08 * mirror;
+      stage.classList.add("playing");
+      video.pause();
+      video.currentTime = 0;
 
-        if (t < 1) {
-          requestAnimationFrame(step);
-        } else {
-          model.position.z = baseZ;
-          model.position.y = baseY;
-          model.rotation.y = baseRotY;
-          model.rotation.z = 0;
-          attacking = false;
-          setStatus(shouldListen ? "聞き取り中：「攻撃！」" : "待機中");
-        }
+      try {
+        await video.play();
+        setStatus("攻撃発動：冥府の先導者");
+      } catch (e) {
+        setStatus("動画再生できません。画面を一度タップしてから再試行してください。", true);
       }
-      requestAnimationFrame(step);
     }
 
-    attackBtn.addEventListener("click", attack);
+    video.addEventListener("ended", () => {
+      stage.classList.remove("playing");
+      setStatus(shouldListen ? "聞き取り中：「攻撃！」" : "待機中");
+    });
 
-    function makeRecognition() {
+    function createRecognition() {
       if (!SpeechRecognition) {
         setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
         startBtn.disabled = true;
         return null;
       }
+
       const rec = new SpeechRecognition();
       rec.lang = "ja-JP";
       rec.continuous = true;
@@ -388,16 +337,17 @@
           normalized.includes("こうげき") ||
           normalized.toLowerCase().includes("attack")
         ) {
-          attack();
+          playAttack();
         }
       };
+
       return rec;
     }
 
     startBtn.addEventListener("click", () => {
       ensureAudio();
       shouldListen = true;
-      recognition = recognition || makeRecognition();
+      recognition = recognition || createRecognition();
       try {
         recognition && recognition.start();
       } catch (e) {
@@ -409,6 +359,8 @@
       shouldListen = false;
       recognition && recognition.stop();
     });
+
+    testBtn.addEventListener("click", playAttack);
 
     fullBtn.addEventListener("click", async () => {
       try {
@@ -425,15 +377,28 @@
 
     mirrorBtn.addEventListener("click", () => {
       mirror = mirror === 1 ? -1 : 1;
-      if (model) model.scale.x = Math.abs(model.scale.x) * mirror;
+      video.style.setProperty("--mirror", mirror);
       setStatus(mirror === -1 ? "左右反転ON" : "左右反転OFF");
     });
 
-    zoomBtn.addEventListener("click", () => {
-      zoom = zoom === 1 ? 1.22 : zoom === 1.22 ? 1.45 : 1;
-      camera.position.z = 5.0 / zoom;
-      zoomBtn.textContent = zoom === 1 ? "拡大" : zoom === 1.22 ? "さらに拡大" : "等倍";
-      setStatus("表示サイズ：" + Math.round(zoom * 100) + "%");
+    fitBtn.addEventListener("click", () => {
+      fitMode = (fitMode + 1) % 3;
+      if (fitMode === 0) {
+        video.style.setProperty("--fit", "contain");
+        video.style.setProperty("--zoom", 1);
+        fitBtn.textContent = "拡大";
+        setStatus("表示：全体表示");
+      } else if (fitMode === 1) {
+        video.style.setProperty("--fit", "cover");
+        video.style.setProperty("--zoom", 1);
+        fitBtn.textContent = "さらに拡大";
+        setStatus("表示：画面いっぱい");
+      } else {
+        video.style.setProperty("--fit", "cover");
+        video.style.setProperty("--zoom", 1.18);
+        fitBtn.textContent = "等倍";
+        setStatus("表示：迫力重視");
+      }
     });
 
     hideBtn.addEventListener("click", () => {
@@ -445,33 +410,6 @@
       if (!controls.contains(e.target)) {
         controls.classList.toggle("show");
       }
-    });
-
-    const clock = new THREE.Clock();
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const dt = clock.getDelta();
-      const elapsed = clock.elapsedTime;
-
-      if (mixer) mixer.update(dt);
-
-      if (model && !attacking) {
-        // 疑似Idle：アニメなしでも、ゆらゆら生きてる感じをつける
-        model.position.y += Math.sin(elapsed * 2.0) * 0.0008;
-        model.rotation.y += 0.002 * mirror;
-      }
-
-      ground.rotation.z += 0.004;
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
     if (!window.isSecureContext) {
