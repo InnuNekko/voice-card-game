@@ -3,22 +3,125 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>3D Voice Card Game Sample</title>
+  <title>冥府の先導者 3D UltraLight</title>
   <style>
-    :root{--ui-bg:rgba(0,0,0,.48);--ui-border:rgba(255,255,255,.18);--text:#f8f0ff;--muted:#cfc0dc;--accent:#c38cff}
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:manipulation}.stage{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(100,30,170,.28),transparent 36%),#000}canvas{display:block;width:100%;height:100%}.title{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;text-shadow:0 0 22px #a55cff;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.08em;font-size:clamp(18px,5vw,34px);opacity:.86}.fx{position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.8),transparent 10%),radial-gradient(circle at 50% 45%,rgba(180,70,255,.75),transparent 34%)}.fx.active{animation:flash .7s ease-out}.slash{position:fixed;left:50%;top:45%;width:min(70vw,460px);height:18px;border-radius:999px;background:linear-gradient(90deg,transparent,#fff,#c05cff,transparent);filter:drop-shadow(0 0 12px white) drop-shadow(0 0 28px #bd5cff);transform:translate(-50%,-50%) rotate(-22deg) scaleX(0);opacity:0;pointer-events:none}.slash.active{animation:slash .55s ease-out}.controls{position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(96vw,820px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:7px;border-radius:999px;border:1px solid var(--ui-border);background:var(--ui-bg);backdrop-filter:blur(10px);z-index:5;opacity:.50;transition:.16s}.controls:focus-within,.controls.show{opacity:1}.controls.hidden{opacity:.05;transform:translateX(-50%) translateY(18px)}button{border:0;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;color:#140b20;background:linear-gradient(180deg,#ead6ff,#aa72ff);box-shadow:0 4px 14px #0006}button:disabled{opacity:.45}.status{width:100%;min-height:1.2em;text-align:center;color:var(--muted);font-size:11px;line-height:1.25;padding:0 10px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.danger{color:#ff9d9d;font-weight:800}@keyframes flash{0%{opacity:0}8%{opacity:.95}22%{opacity:.15}38%{opacity:.65}100%{opacity:0}}@keyframes slash{0%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(0);opacity:0}15%{opacity:1}65%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1)}100%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1.15);opacity:0}}
+    :root {
+      --ui-bg: rgba(0,0,0,.50);
+      --ui-border: rgba(255,255,255,.18);
+      --text: #f8f0ff;
+      --muted: #cfc0dc;
+      --accent: #c38cff;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; width: 100%; height: 100%; overflow: hidden;
+      background: #000; color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      touch-action: manipulation;
+    }
+    .stage {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(115,35,160,.32), transparent 36%),
+        radial-gradient(circle at 50% 75%, rgba(40,20,80,.42), transparent 38%),
+        #000;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .title {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      pointer-events: none;
+      text-shadow: 0 0 22px #a55cff;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      letter-spacing: .08em;
+      font-size: clamp(18px, 5vw, 34px);
+      opacity: .90;
+    }
+    .fx {
+      position: fixed; inset: 0; pointer-events: none; opacity: 0;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255,255,255,.80), transparent 10%),
+        radial-gradient(circle at 50% 45%, rgba(180,70,255,.75), transparent 34%);
+    }
+    .fx.active { animation: flash .7s ease-out; }
+    .slash {
+      position: fixed;
+      left: 50%; top: 44%;
+      width: min(74vw, 520px); height: 18px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #fff, #c05cff, transparent);
+      filter: drop-shadow(0 0 12px white) drop-shadow(0 0 28px #bd5cff);
+      transform: translate(-50%,-50%) rotate(-22deg) scaleX(0);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .slash.active { animation: slash .55s ease-out; }
+    .controls {
+      position: fixed; left: 50%;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: min(96vw, 860px);
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 6px; padding: 7px;
+      border-radius: 999px;
+      border: 1px solid var(--ui-border);
+      background: var(--ui-bg);
+      backdrop-filter: blur(10px);
+      z-index: 5;
+      opacity: .52;
+      transition: .16s;
+    }
+    .controls:focus-within, .controls.show { opacity: 1; }
+    .controls.hidden { opacity: .05; transform: translateX(-50%) translateY(18px); }
+    button {
+      border: 0; border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px; font-weight: 900;
+      color: #140b20;
+      background: linear-gradient(180deg, #ead6ff, #aa72ff);
+      box-shadow: 0 4px 14px #0006;
+    }
+    button:disabled { opacity: .45; }
+    .status {
+      width: 100%; min-height: 1.2em;
+      text-align: center; color: var(--muted);
+      font-size: 11px; line-height: 1.25;
+      padding: 0 10px 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .danger { color: #ff9d9d; font-weight: 800; }
+    @keyframes flash {
+      0%{opacity:0} 8%{opacity:.95} 22%{opacity:.15} 38%{opacity:.65} 100%{opacity:0}
+    }
+    @keyframes slash {
+      0%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(0);opacity:0}
+      15%{opacity:1}
+      65%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1)}
+      100%{transform:translate(-50%,-50%) rotate(-22deg) scaleX(1.15);opacity:0}
+    }
   </style>
+
   <script type="importmap">
-    {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
   </script>
 </head>
+
 <body>
   <main class="stage" id="stage"></main>
-  <div class="title">3D召喚サンプル</div>
+  <div class="title">冥府の先導者 3D 軽量版</div>
   <div class="fx" id="fx"></div>
   <div class="slash" id="slash"></div>
+
   <section class="controls show" id="controls">
-    <div class="status" id="status">読み込み中…</div>
+    <div class="status" id="status">読み込み中...</div>
     <button id="startBtn">マイク</button>
     <button id="stopBtn" disabled>停止</button>
     <button id="attackBtn">攻撃</button>
@@ -29,232 +132,351 @@
   </section>
 
   <script type="module">
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-    const stage = document.getElementById('stage');
-    const statusEl = document.getElementById('status');
-    const controls = document.getElementById('controls');
-    const fx = document.getElementById('fx');
-    const slash = document.getElementById('slash');
+    const stage = document.getElementById("stage");
+    const statusEl = document.getElementById("status");
+    const fx = document.getElementById("fx");
+    const slash = document.getElementById("slash");
+    const controls = document.getElementById("controls");
 
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const attackBtn = document.getElementById('attackBtn');
-    const fullBtn = document.getElementById('fullBtn');
-    const mirrorBtn = document.getElementById('mirrorBtn');
-    const zoomBtn = document.getElementById('zoomBtn');
-    const hideBtn = document.getElementById('hideBtn');
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const attackBtn = document.getElementById("attackBtn");
+    const fullBtn = document.getElementById("fullBtn");
+    const mirrorBtn = document.getElementById("mirrorBtn");
+    const zoomBtn = document.getElementById("zoomBtn");
+    const hideBtn = document.getElementById("hideBtn");
 
+    const MODEL_URL = "./fantasy_knight_ultralite.glb";
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    let mixer, model, actions = {}, activeAction, idleAction, attackAction;
-    let clock = new THREE.Clock();
-    let recognition = null;
+    let model = null;
+    let mixer = null;
+    let idleAction = null;
+    let attackAction = null;
+    let attacking = false;
     let shouldListen = false;
+    let recognition = null;
     let audioCtx = null;
     let mirror = 1;
-    let zoomMode = 0;
+    let zoom = 1;
 
     function setStatus(text, danger = false) {
       statusEl.textContent = text;
-      statusEl.className = danger ? 'status danger' : 'status';
+      statusEl.className = danger ? "status danger" : "status";
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.Fog(0x000000, 6, 12);
 
-    const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.1, 100);
-    camera.position.set(0, 1.45, 5.2);
-    camera.lookAt(0, 1.1, 0);
+    const camera = new THREE.PerspectiveCamera(
+      38,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      100
+    );
+    camera.position.set(0, 1.3, 5.0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.setSize(innerWidth, innerHeight);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     stage.appendChild(renderer.domElement);
 
-    const hemi = new THREE.HemisphereLight(0xbbaaff, 0x120018, 1.9);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x251235, 2.4);
     scene.add(hemi);
-    const key = new THREE.DirectionalLight(0xffffff, 2.2);
-    key.position.set(2.5, 4.5, 4.0);
+
+    const key = new THREE.DirectionalLight(0xffffff, 3.2);
+    key.position.set(2.5, 4, 3);
     scene.add(key);
-    const purple = new THREE.PointLight(0xb15cff, 6.2, 7);
-    purple.position.set(0, 1.6, 2.4);
-    scene.add(purple);
 
-    const ringGeo = new THREE.RingGeometry(0.85, 1.05, 72);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x9d57ff, side: THREE.DoubleSide, transparent: true, opacity: 0.38 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.02;
-    scene.add(ring);
+    const rim = new THREE.DirectionalLight(0xa666ff, 2.2);
+    rim.position.set(-3, 2, -2);
+    scene.add(rim);
 
-    const loader = new GLTFLoader();
-    loader.load('./sample_monster.glb', (gltf) => {
-      model = gltf.scene;
-      model.position.y = -1.16;
-      model.scale.setScalar(1.55);
-      scene.add(model);
-
-      mixer = new THREE.AnimationMixer(model);
-      gltf.animations.forEach((clip) => {
-        actions[clip.name] = mixer.clipAction(clip);
-      });
-
-      idleAction = actions['Idle'] || mixer.clipAction(gltf.animations[0]);
-      attackAction = actions['Attack'] || mixer.clipAction(gltf.animations[1] || gltf.animations[0]);
-
-      idleAction.setLoop(THREE.LoopRepeat);
-      idleAction.play();
-      activeAction = idleAction;
-
-      if (attackAction) {
-        attackAction.setLoop(THREE.LoopOnce);
-        attackAction.clampWhenFinished = false;
-      }
-
-      mixer.addEventListener('finished', () => playIdle());
-      const names = gltf.animations.map(a => a.name).join(', ');
-      setStatus('3Dモデル読込OK：' + names + ' / 「攻撃！」でAttack');
-    }, undefined, (error) => {
-      console.error(error);
-      setStatus('GLBを読み込めません。sample_monster.glbが同じ場所にあるか確認してください。', true);
-    });
-
-    function fadeTo(action, duration = 0.18) {
-      if (!action) return;
-      if (activeAction && activeAction !== action) {
-        activeAction.fadeOut(duration);
-      }
-      action.reset().fadeIn(duration).play();
-      activeAction = action;
-    }
-
-    function playIdle() {
-      if (idleAction) fadeTo(idleAction, 0.18);
-      setStatus(shouldListen ? '聞き取り中：「攻撃！」' : '待機中');
-    }
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(1.75, 96),
+      new THREE.MeshBasicMaterial({ color: 0x5b25a0, transparent: true, opacity: 0.18 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1.25;
+    scene.add(ground);
 
     function ensureAudio() {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx.state === "suspended") audioCtx.resume();
       return audioCtx;
     }
 
     function thunder() {
       const ctx = ensureAudio();
       const now = ctx.currentTime;
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(78, now);
-      osc.frequency.exponentialRampToValueAtTime(22, now + .65);
-      gain.gain.setValueAtTime(.001, now);
-      gain.gain.exponentialRampToValueAtTime(.75, now + .025);
-      gain.gain.exponentialRampToValueAtTime(.001, now + .85);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(72, now);
+      osc.frequency.exponentialRampToValueAtTime(24, now + 0.65);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.75, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
       osc.connect(gain).connect(ctx.destination);
-      osc.start(now); osc.stop(now + .9);
+      osc.start(now);
+      osc.stop(now + 1.05);
 
-      const dur = .45, n = Math.floor(ctx.sampleRate * dur);
-      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+      const dur = 0.42;
+      const n = Math.floor(ctx.sampleRate * dur);
+      const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < n; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+      }
       const src = ctx.createBufferSource();
       const filter = ctx.createBiquadFilter();
-      const ngain = ctx.createGain();
-      src.buffer = buf; filter.type = 'bandpass'; filter.frequency.value = 950;
-      ngain.gain.setValueAtTime(.001, now);
-      ngain.gain.exponentialRampToValueAtTime(.38, now + .02);
-      ngain.gain.exponentialRampToValueAtTime(.001, now + dur);
-      src.connect(filter).connect(ngain).connect(ctx.destination);
-      src.start(now); src.stop(now + dur);
+      const ng = ctx.createGain();
+      src.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = 950;
+      ng.gain.setValueAtTime(0.001, now);
+      ng.gain.exponentialRampToValueAtTime(0.38, now + 0.02);
+      ng.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      src.connect(filter).connect(ng).connect(ctx.destination);
+      src.start(now);
+      src.stop(now + dur);
     }
 
-    function playAttack() {
+    function fitModel(object) {
+      const box = new THREE.Box3().setFromObject(object);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+
+      object.position.sub(center);
+
+      const maxSide = Math.max(size.x, size.y, size.z);
+      const scale = 2.65 / maxSide;
+      object.scale.setScalar(scale);
+
+      // 少し下げて全身が見えるようにする
+      object.position.y -= 0.15;
+      object.rotation.y = Math.PI;
+    }
+
+    const loader = new GLTFLoader();
+    loader.load(
+      MODEL_URL,
+      (gltf) => {
+        model = gltf.scene;
+        fitModel(model);
+        scene.add(model);
+
+        if (gltf.animations && gltf.animations.length > 0) {
+          mixer = new THREE.AnimationMixer(model);
+          idleAction = mixer.clipAction(gltf.animations[0]);
+          idleAction.play();
+          setStatus("3Dモデル読み込み完了。アニメーションあり：" + gltf.animations.length);
+        } else {
+          setStatus("3Dモデル読み込み完了。内蔵アニメなし → Web側で疑似攻撃します。");
+        }
+      },
+      (xhr) => {
+        if (xhr.total) {
+          const pct = Math.round(xhr.loaded / xhr.total * 100);
+          setStatus("3Dモデル読み込み中... " + pct + "%");
+        } else {
+          setStatus("3Dモデル読み込み中...");
+        }
+      },
+      (err) => {
+        console.error(err);
+        setStatus("3Dモデルを読み込めません。fantasy_knight_ultralite.glb が同じ場所にあるか確認してください。", true);
+      }
+    );
+
+    function playFx() {
+      fx.classList.remove("active");
+      slash.classList.remove("active");
+      void fx.offsetWidth;
+      void slash.offsetWidth;
+      fx.classList.add("active");
+      slash.classList.add("active");
+    }
+
+    function attack() {
+      if (!model || attacking) return;
       ensureAudio();
       thunder();
-      fx.classList.remove('active'); slash.classList.remove('active');
-      void fx.offsetWidth; void slash.offsetWidth;
-      fx.classList.add('active'); slash.classList.add('active');
-      if (attackAction) {
-        fadeTo(attackAction, 0.06);
-        setStatus('攻撃発動：3DモデルのAttackアニメ再生');
-      } else {
-        setStatus('Attackアニメが見つかりません', true);
+      playFx();
+      attacking = true;
+      setStatus("攻撃発動：冥府の先導者");
+
+      // 内蔵アニメがない場合でも、Web側で攻撃っぽい動きをつける
+      const start = performance.now();
+      const baseZ = model.position.z;
+      const baseY = model.position.y;
+      const baseRotY = model.rotation.y;
+
+      function step(now) {
+        const t = Math.min(1, (now - start) / 850);
+        const s = Math.sin(Math.PI * t);
+        model.position.z = baseZ + s * 0.85;
+        model.position.y = baseY + s * 0.18;
+        model.rotation.y = baseRotY + Math.sin(Math.PI * t * 2) * 0.14 * mirror;
+        model.rotation.z = Math.sin(Math.PI * t) * -0.08 * mirror;
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          model.position.z = baseZ;
+          model.position.y = baseY;
+          model.rotation.y = baseRotY;
+          model.rotation.z = 0;
+          attacking = false;
+          setStatus(shouldListen ? "聞き取り中：「攻撃！」" : "待機中");
+        }
       }
+      requestAnimationFrame(step);
     }
 
-    function createRecognition() {
+    attackBtn.addEventListener("click", attack);
+
+    function makeRecognition() {
       if (!SpeechRecognition) {
-        setStatus('このブラウザは音声認識に未対応です。Android Chrome推奨です。', true);
+        setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
         startBtn.disabled = true;
         return null;
       }
       const rec = new SpeechRecognition();
-      rec.lang = 'ja-JP';
+      rec.lang = "ja-JP";
       rec.continuous = true;
       rec.interimResults = true;
-      rec.onstart = () => { setStatus('聞き取り中：「攻撃！」'); startBtn.disabled = true; stopBtn.disabled = false; };
-      rec.onend = () => {
-        stopBtn.disabled = true; startBtn.disabled = false;
-        if (shouldListen) setTimeout(() => { try { rec.start(); } catch(e) {} }, 350);
-        else setStatus('停止中');
+
+      rec.onstart = () => {
+        setStatus("聞き取り中：「攻撃！」");
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
       };
-      rec.onerror = e => setStatus('音声認識エラー：' + e.error + '。マイク許可を確認してください。', true);
-      rec.onresult = event => {
-        const text = event.results[event.results.length - 1][0].transcript.trim();
-        const normalized = text.replace(/\s/g, '');
-        setStatus('認識：' + text);
-        if (normalized.includes('攻撃') || normalized.includes('こうげき') || normalized.toLowerCase().includes('attack')) playAttack();
+
+      rec.onend = () => {
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+        if (shouldListen) {
+          setTimeout(() => {
+            try { rec.start(); } catch (e) {}
+          }, 350);
+        } else {
+          setStatus("停止中");
+        }
+      };
+
+      rec.onerror = (e) => {
+        setStatus("音声認識エラー：" + e.error + "。Chromeのマイク許可を確認してください。", true);
+      };
+
+      rec.onresult = (event) => {
+        const result = event.results[event.results.length - 1];
+        const text = result[0].transcript.trim();
+        const normalized = text.replace(/\s/g, "");
+        setStatus("認識：" + text);
+
+        if (
+          normalized.includes("攻撃") ||
+          normalized.includes("こうげき") ||
+          normalized.toLowerCase().includes("attack")
+        ) {
+          attack();
+        }
       };
       return rec;
     }
 
-    startBtn.onclick = () => { ensureAudio(); shouldListen = true; recognition = recognition || createRecognition(); try { recognition && recognition.start(); } catch(e) { setStatus('開始できません：' + e.message, true); } };
-    stopBtn.onclick = () => { shouldListen = false; recognition && recognition.stop(); };
-    attackBtn.onclick = playAttack;
-    fullBtn.onclick = async () => {
+    startBtn.addEventListener("click", () => {
+      ensureAudio();
+      shouldListen = true;
+      recognition = recognition || makeRecognition();
+      try {
+        recognition && recognition.start();
+      } catch (e) {
+        setStatus("開始できません：" + e.message, true);
+      }
+    });
+
+    stopBtn.addEventListener("click", () => {
+      shouldListen = false;
+      recognition && recognition.stop();
+    });
+
+    fullBtn.addEventListener("click", async () => {
       try {
         if (!document.fullscreenElement) {
           await document.documentElement.requestFullscreen();
-          if (screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{});
-          setStatus('全画面モード');
-        } else await document.exitFullscreen();
-      } catch(e) { setStatus('全画面にできませんでした', true); }
-    };
-    mirrorBtn.onclick = () => {
-      mirror *= -1;
-      if (model) model.scale.x = Math.abs(model.scale.x) * mirror;
-      setStatus(mirror < 0 ? '左右反転ON' : '左右反転OFF');
-    };
-    zoomBtn.onclick = () => {
-      zoomMode = (zoomMode + 1) % 3;
-      const z = zoomMode === 0 ? 1.55 : zoomMode === 1 ? 1.85 : 2.15;
-      if (model) model.scale.set(Math.abs(z) * mirror, z, z);
-      zoomBtn.textContent = zoomMode === 0 ? '拡大' : zoomMode === 1 ? 'さらに拡大' : '等倍';
-      setStatus('表示サイズ：' + Math.round(z / 1.55 * 100) + '%');
-    };
-    hideBtn.onclick = () => { controls.classList.toggle('hidden'); hideBtn.textContent = controls.classList.contains('hidden') ? 'UI戻す' : 'UI小'; };
-    document.body.addEventListener('click', e => { if (!controls.contains(e.target)) controls.classList.toggle('show'); });
-
-    addEventListener('resize', () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
+          setStatus("全画面モード");
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (e) {
+        setStatus("全画面にできませんでした。", true);
+      }
     });
+
+    mirrorBtn.addEventListener("click", () => {
+      mirror = mirror === 1 ? -1 : 1;
+      if (model) model.scale.x = Math.abs(model.scale.x) * mirror;
+      setStatus(mirror === -1 ? "左右反転ON" : "左右反転OFF");
+    });
+
+    zoomBtn.addEventListener("click", () => {
+      zoom = zoom === 1 ? 1.22 : zoom === 1.22 ? 1.45 : 1;
+      camera.position.z = 5.0 / zoom;
+      zoomBtn.textContent = zoom === 1 ? "拡大" : zoom === 1.22 ? "さらに拡大" : "等倍";
+      setStatus("表示サイズ：" + Math.round(zoom * 100) + "%");
+    });
+
+    hideBtn.addEventListener("click", () => {
+      controls.classList.toggle("hidden");
+      hideBtn.textContent = controls.classList.contains("hidden") ? "UI戻す" : "UI小";
+    });
+
+    document.body.addEventListener("click", (e) => {
+      if (!controls.contains(e.target)) {
+        controls.classList.toggle("show");
+      }
+    });
+
+    const clock = new THREE.Clock();
 
     function animate() {
       requestAnimationFrame(animate);
+
       const dt = clock.getDelta();
+      const elapsed = clock.elapsedTime;
+
       if (mixer) mixer.update(dt);
-      ring.rotation.z += dt * 0.8;
+
+      if (model && !attacking) {
+        // 疑似Idle：アニメなしでも、ゆらゆら生きてる感じをつける
+        model.position.y += Math.sin(elapsed * 2.0) * 0.0008;
+        model.rotation.y += 0.002 * mirror;
+      }
+
+      ground.rotation.z += 0.004;
       renderer.render(scene, camera);
     }
     animate();
 
-    if (!window.isSecureContext) setStatus('GitHub PagesのURLで開くとマイクが安定します。', true);
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    if (!window.isSecureContext) {
+      setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。", true);
+    }
   </script>
 </body>
 </html>
