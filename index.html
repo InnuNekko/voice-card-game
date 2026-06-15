@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>冥府の先導者 Idle Attack</title>
+<title>冥府の先導者 Idle Attack v2</title>
 <style>
 :root{--fit:contain;--zoom:1;--mirror:1}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#f7f3e8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:manipulation}
 .stage{position:fixed;inset:0;display:grid;place-items:center;background:#000;overflow:hidden}
-video{position:absolute;inset:0;width:100vw;height:100svh;object-fit:var(--fit);background:#000;transform:scale(var(--zoom)) scaleX(var(--mirror));filter:contrast(1.05) brightness(1.06) saturate(1.04)}
+video{position:absolute;inset:0;width:100vw;height:100svh;object-fit:var(--fit);background:#000;transform:scale(var(--zoom)) scaleX(var(--mirror));filter:contrast(1.04) brightness(1.05) saturate(1.04)}
 #idleVideo{opacity:1;z-index:1}
 #attackVideo{opacity:0;z-index:2;transition:opacity 80ms ease}
 .stage.attacking #attackVideo{opacity:1}
@@ -30,13 +30,13 @@ button:disabled{opacity:.45}
 </head>
 <body>
 <main class="stage" id="stage">
-  <video id="idleVideo" src="./idle_motion.mp4" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
-  <video id="attackVideo" src="./attack_motion.mp4" playsinline webkit-playsinline preload="auto"></video>
+  <video id="idleVideo" src="./idle_motion.mp4?v=2" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
+  <video id="attackVideo" src="./attack_motion.mp4?v=2" playsinline webkit-playsinline preload="auto"></video>
   <div class="flash" id="flash"></div>
   <div class="title">冥府の先導者</div>
 </main>
 <section class="controls show" id="controls">
-  <div class="status" id="status">Idle再生中。「攻撃！」でAttackへ切替</div>
+  <div class="status" id="status">v2：Idle再生中。「攻撃！」でAttackへ切替</div>
   <button id="startBtn">マイク</button>
   <button id="stopBtn" disabled>停止</button>
   <button id="attackBtn">攻撃</button>
@@ -54,14 +54,16 @@ let recognition=null,wantMicOn=false,isListening=false,isAttacking=false,micLock
 function setStatus(t,d=false){statusEl.textContent=t;statusEl.className=d?"status danger":"status"}
 function updateButtons(){if(micLocked||isAttacking){startBtn.disabled=true;stopBtn.disabled=true;return}startBtn.disabled=isListening;stopBtn.disabled=!isListening}
 function ensureAudio(){audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}
-function impactSound(){const ctx=ensureAudio(),now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(84,now);o.frequency.exponentialRampToValueAtTime(26,now+.55);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.42,now+.025);g.gain.exponentialRampToValueAtTime(.001,now+.75);o.connect(g).connect(ctx.destination);o.start(now);o.stop(now+.82)}
-async function ensureIdlePlaying(){try{idleVideo.muted=true;await idleVideo.play()}catch(e){setStatus("Idle自動再生待ち。画面を一度タップしてください。")}}
+function impactSound(){const ctx=ensureAudio(),now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(84,now);o.frequency.exponentialRampToValueAtTime(26,now+.55);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.25,now+.025);g.gain.exponentialRampToValueAtTime(.001,now+.75);o.connect(g).connect(ctx.destination);o.start(now);o.stop(now+.82)}
+async function ensureIdlePlaying(){try{idleVideo.muted=true;idleVideo.loop=true;await idleVideo.play()}catch(e){setStatus("Idle自動再生待ち。画面を一度タップしてください。")}}
 function lockMicForAttack(){clearTimeout(restartTimer);micLocked=true;isListening=false;updateButtons();if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}}
 function unlockMicAfterAttack(){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{micLocked=false;isAttacking=false;updateButtons();if(wantMicOn){setStatus("Idleへ戻りました。マイク再開中...");startMicSafely()}else setStatus("Idleへ戻りました。")},800)}
 async function playAttack(){if(isAttacking)return;isAttacking=true;lockMicForAttack();ensureAudio();impactSound();setStatus("攻撃発動：Attack動画へ切替");flash.classList.remove("active");void flash.offsetWidth;flash.classList.add("active");try{idleVideo.pause();attackVideo.pause();attackVideo.currentTime=0;stage.classList.add("attacking");attackVideo.muted=false;await attackVideo.play()}catch(e){setStatus("Attack動画を再生できません。画面を一度タップしてから再試行してください。",true);returnToIdle()}}
 async function returnToIdle(){stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdlePlaying();unlockMicAfterAttack()}
 attackVideo.addEventListener("ended",returnToIdle);
 idleVideo.addEventListener("canplay",ensureIdlePlaying);
+idleVideo.addEventListener("error",()=>setStatus("Idle動画を読めません。idle_motion.mp4 の名前を確認してください。",true));
+attackVideo.addEventListener("error",()=>setStatus("Attack動画を読めません。attack_motion.mp4 の名前を確認してください。",true));
 idleBtn.addEventListener("click",async()=>{isAttacking=false;micLocked=false;stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdlePlaying();setStatus("Idle再生中");updateButtons()});
 function makeRecognition(){if(!SpeechRecognition){setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。",true);startBtn.disabled=true;return null}const rec=new SpeechRecognition();rec.lang="ja-JP";rec.continuous=true;rec.interimResults=true;rec.onstart=()=>{if(micLocked||isAttacking){try{rec.abort()}catch(e){}return}isListening=true;setStatus("聞き取り中：「攻撃！」");updateButtons()};rec.onend=()=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;if(wantMicOn){clearTimeout(restartTimer);restartTimer=setTimeout(startMicSafely,600)}else setStatus("マイク停止中。Idle再生中。")};rec.onerror=e=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;setStatus("音声認識エラー："+e.error+"。Chromeのマイク許可を確認してください。",true)};rec.onresult=e=>{if(micLocked||isAttacking)return;const r=e.results[e.results.length-1],text=r[0].transcript.trim(),n=text.replace(/\s/g,"");setStatus("認識："+text);if(n.includes("攻撃")||n.includes("こうげき")||n.toLowerCase().includes("attack"))playAttack()};return rec}
 function startMicSafely(){if(!wantMicOn||micLocked||isAttacking){updateButtons();return}recognition=recognition||makeRecognition();if(!recognition)return;try{recognition.start()}catch(e){}updateButtons()}
