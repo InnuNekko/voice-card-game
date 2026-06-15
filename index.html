@@ -1,82 +1,39 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>冥府の先導者 Idle Attack v2</title>
-<style>
-:root{--fit:contain;--zoom:1;--mirror:1}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#f7f3e8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:manipulation}
-.stage{position:fixed;inset:0;display:grid;place-items:center;background:#000;overflow:hidden}
-video{position:absolute;inset:0;width:100vw;height:100svh;object-fit:var(--fit);background:#000;transform:scale(var(--zoom)) scaleX(var(--mirror));filter:contrast(1.04) brightness(1.05) saturate(1.04)}
-#idleVideo{opacity:1;z-index:1}
-#attackVideo{opacity:0;z-index:2;transition:opacity 80ms ease}
-.stage.attacking #attackVideo{opacity:1}
-.stage.attacking #idleVideo{opacity:0}
-.flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:3;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.78),transparent 16%),radial-gradient(circle at 50% 42%,rgba(160,90,255,.70),transparent 38%)}
-.flash.active{animation:flash .52s ease-out}
-@keyframes flash{0%{opacity:0}10%{opacity:.9}24%{opacity:.12}38%{opacity:.55}100%{opacity:0}}
-.title{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.08em;text-shadow:0 0 22px rgba(180,120,255,.88);font-size:clamp(18px,5vw,38px);opacity:.55}
-.stage.attacking .title{opacity:0}
-.controls{position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(96vw,880px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.50);backdrop-filter:blur(10px);z-index:5;opacity:.44;transition:.16s}
-.controls:focus-within,.controls.show{opacity:1}
-.controls.hidden{opacity:.05;transform:translateX(-50%) translateY(18px)}
-button{border:0;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;color:#140b20;background:linear-gradient(180deg,#ead6ff,#aa72ff);box-shadow:0 4px 14px rgba(0,0,0,.35)}
-button:disabled{opacity:.45}
-.status{width:100%;min-height:1.2em;text-align:center;color:#cfc6b4;font-size:11px;line-height:1.25;padding:0 10px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.danger{color:#ff9d9d;font-weight:800}
-</style>
-</head>
-<body>
-<main class="stage" id="stage">
-  <video id="idleVideo" src="./idle_motion.mp4?v=2" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
-  <video id="attackVideo" src="./attack_motion.mp4?v=2" playsinline webkit-playsinline preload="auto"></video>
-  <div class="flash" id="flash"></div>
-  <div class="title">冥府の先導者</div>
-</main>
-<section class="controls show" id="controls">
-  <div class="status" id="status">v2：Idle再生中。「攻撃！」でAttackへ切替</div>
-  <button id="startBtn">マイク</button>
-  <button id="stopBtn" disabled>停止</button>
-  <button id="attackBtn">攻撃</button>
-  <button id="idleBtn">Idle</button>
-  <button id="fullBtn">全画面</button>
-  <button id="mirrorBtn">左右反転</button>
-  <button id="fitBtn">拡大</button>
-  <button id="hideBtn">UI小</button>
-</section>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>冥府の先導者 Idle Attack v5</title><style>
+:root{--fit:contain;--mirror:1;--idle-x:0px;--idle-y:0px;--idle-z:1;--atk-x:0px;--atk-y:0px;--atk-z:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#f7f3e8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:manipulation}
+.stage{position:fixed;inset:0;background:#000;overflow:hidden}video{position:absolute;inset:0;width:100vw;height:100svh;object-fit:var(--fit);background:#000;filter:contrast(1.04) brightness(1.05) saturate(1.04)}
+#idleVideo{opacity:1;z-index:1;transform:translate(var(--idle-x),var(--idle-y)) scale(var(--idle-z)) scaleX(var(--mirror))}
+#attackVideo{opacity:0;z-index:2;transition:opacity 80ms ease;transform:translate(var(--atk-x),var(--atk-y)) scale(var(--atk-z)) scaleX(var(--mirror))}
+.stage.attacking #attackVideo{opacity:1}.stage.attacking #idleVideo{opacity:0}
+.flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:3;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.78),transparent 16%),radial-gradient(circle at 50% 42%,rgba(160,90,255,.70),transparent 38%)}.flash.active{animation:flash .52s ease-out}@keyframes flash{0%{opacity:0}10%{opacity:.9}24%{opacity:.12}38%{opacity:.55}100%{opacity:0}}
+.title{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;font-family:"Yu Mincho","Hiragino Mincho ProN",serif;letter-spacing:.08em;text-shadow:0 0 22px rgba(180,120,255,.88);font-size:clamp(18px,5vw,38px);opacity:.55}.stage.attacking .title{opacity:0}
+.controls{position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(96vw,930px);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:7px;border-radius:24px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.52);backdrop-filter:blur(10px);z-index:5;opacity:.46;transition:.16s}.controls:focus-within,.controls.show{opacity:1}.controls.hidden{opacity:.05;transform:translateX(-50%) translateY(18px)}
+button{border:0;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:900;color:#140b20;background:linear-gradient(180deg,#ead6ff,#aa72ff);box-shadow:0 4px 14px rgba(0,0,0,.35)}button.secondary{background:linear-gradient(180deg,#e5e5e5,#a9a9a9)}button:disabled{opacity:.45}
+.status{width:100%;min-height:1.2em;text-align:center;color:#cfc6b4;font-size:11px;line-height:1.25;padding:0 10px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.danger{color:#ff9d9d;font-weight:800}
+.alignPanel{width:100%;display:none;grid-template-columns:repeat(6,auto);gap:6px;justify-content:center}.controls.align .alignPanel{display:grid}@media(max-width:560px){.alignPanel{grid-template-columns:repeat(3,auto)}button{font-size:11px;padding:8px 10px}}
+</style></head><body>
+<main class="stage" id="stage"><video id="idleVideo" src="./idle_motion.mp4?v=5" autoplay muted loop playsinline webkit-playsinline preload="auto"></video><video id="attackVideo" src="./attack_motion.mp4?v=5" playsinline webkit-playsinline preload="auto"></video><div class="flash" id="flash"></div><div class="title">冥府の先導者</div></main>
+<section class="controls show" id="controls"><div class="status" id="status">v5：正しいIdle/Attack。Idle音声なし。</div><button id="startBtn">マイク</button><button id="stopBtn" disabled>停止</button><button id="attackBtn">攻撃</button><button id="idleBtn">Idle</button><button id="fullBtn">全画面</button><button id="mirrorBtn">左右反転</button><button id="fitBtn">拡大</button><button id="alignBtn">位置補正</button><button id="hideBtn">UI小</button><div class="alignPanel" id="alignPanel"><button class="secondary" id="leftBtn">攻撃←</button><button class="secondary" id="rightBtn">攻撃→</button><button class="secondary" id="upBtn">攻撃↑</button><button class="secondary" id="downBtn">攻撃↓</button><button class="secondary" id="zinBtn">攻撃＋</button><button class="secondary" id="zoutBtn">攻撃−</button><button class="secondary" id="saveBtn">保存</button><button class="secondary" id="resetBtn">リセット</button></div></section>
 <script>
-const stage=document.getElementById("stage"),idleVideo=document.getElementById("idleVideo"),attackVideo=document.getElementById("attackVideo"),flash=document.getElementById("flash"),controls=document.getElementById("controls"),statusEl=document.getElementById("status");
-const startBtn=document.getElementById("startBtn"),stopBtn=document.getElementById("stopBtn"),attackBtn=document.getElementById("attackBtn"),idleBtn=document.getElementById("idleBtn"),fullBtn=document.getElementById("fullBtn"),mirrorBtn=document.getElementById("mirrorBtn"),fitBtn=document.getElementById("fitBtn"),hideBtn=document.getElementById("hideBtn");
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null,wantMicOn=false,isListening=false,isAttacking=false,micLocked=false,restartTimer=null,audioCtx=null,mirror=1,fitMode=0;
-function setStatus(t,d=false){statusEl.textContent=t;statusEl.className=d?"status danger":"status"}
+const $=id=>document.getElementById(id),stage=$("stage"),idleVideo=$("idleVideo"),attackVideo=$("attackVideo"),flash=$("flash"),controls=$("controls"),statusEl=$("status"),startBtn=$("startBtn"),stopBtn=$("stopBtn"),attackBtn=$("attackBtn"),idleBtn=$("idleBtn"),fullBtn=$("fullBtn"),mirrorBtn=$("mirrorBtn"),fitBtn=$("fitBtn"),alignBtn=$("alignBtn"),hideBtn=$("hideBtn");
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null,wantMicOn=false,isListening=false,isAttacking=false,micLocked=false,restartTimer=null,audioCtx=null,mirror=1,fitMode=0;
+let ax=Number(localStorage.getItem("atkX")||0),ay=Number(localStorage.getItem("atkY")||0),az=Number(localStorage.getItem("atkZ")||1);
+function setStatus(t,d=false){statusEl.textContent=t;statusEl.className=d?"status danger":"status"}function css(n,v){document.documentElement.style.setProperty(n,v)}function apply(){css("--atk-x",ax+"px");css("--atk-y",ay+"px");css("--atk-z",az)}apply();
+function save(){localStorage.setItem("atkX",ax);localStorage.setItem("atkY",ay);localStorage.setItem("atkZ",az);setStatus(`保存：攻撃X ${ax}px / Y ${ay}px / ${Math.round(az*100)}%`)}
 function updateButtons(){if(micLocked||isAttacking){startBtn.disabled=true;stopBtn.disabled=true;return}startBtn.disabled=isListening;stopBtn.disabled=!isListening}
 function ensureAudio(){audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}
-function impactSound(){const ctx=ensureAudio(),now=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(84,now);o.frequency.exponentialRampToValueAtTime(26,now+.55);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.25,now+.025);g.gain.exponentialRampToValueAtTime(.001,now+.75);o.connect(g).connect(ctx.destination);o.start(now);o.stop(now+.82)}
-async function ensureIdlePlaying(){try{idleVideo.muted=true;idleVideo.loop=true;await idleVideo.play()}catch(e){setStatus("Idle自動再生待ち。画面を一度タップしてください。")}}
-function lockMicForAttack(){clearTimeout(restartTimer);micLocked=true;isListening=false;updateButtons();if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}}
-function unlockMicAfterAttack(){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{micLocked=false;isAttacking=false;updateButtons();if(wantMicOn){setStatus("Idleへ戻りました。マイク再開中...");startMicSafely()}else setStatus("Idleへ戻りました。")},800)}
-async function playAttack(){if(isAttacking)return;isAttacking=true;lockMicForAttack();ensureAudio();impactSound();setStatus("攻撃発動：Attack動画へ切替");flash.classList.remove("active");void flash.offsetWidth;flash.classList.add("active");try{idleVideo.pause();attackVideo.pause();attackVideo.currentTime=0;stage.classList.add("attacking");attackVideo.muted=false;await attackVideo.play()}catch(e){setStatus("Attack動画を再生できません。画面を一度タップしてから再試行してください。",true);returnToIdle()}}
-async function returnToIdle(){stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdlePlaying();unlockMicAfterAttack()}
-attackVideo.addEventListener("ended",returnToIdle);
-idleVideo.addEventListener("canplay",ensureIdlePlaying);
-idleVideo.addEventListener("error",()=>setStatus("Idle動画を読めません。idle_motion.mp4 の名前を確認してください。",true));
-attackVideo.addEventListener("error",()=>setStatus("Attack動画を読めません。attack_motion.mp4 の名前を確認してください。",true));
-idleBtn.addEventListener("click",async()=>{isAttacking=false;micLocked=false;stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdlePlaying();setStatus("Idle再生中");updateButtons()});
-function makeRecognition(){if(!SpeechRecognition){setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。",true);startBtn.disabled=true;return null}const rec=new SpeechRecognition();rec.lang="ja-JP";rec.continuous=true;rec.interimResults=true;rec.onstart=()=>{if(micLocked||isAttacking){try{rec.abort()}catch(e){}return}isListening=true;setStatus("聞き取り中：「攻撃！」");updateButtons()};rec.onend=()=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;if(wantMicOn){clearTimeout(restartTimer);restartTimer=setTimeout(startMicSafely,600)}else setStatus("マイク停止中。Idle再生中。")};rec.onerror=e=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;setStatus("音声認識エラー："+e.error+"。Chromeのマイク許可を確認してください。",true)};rec.onresult=e=>{if(micLocked||isAttacking)return;const r=e.results[e.results.length-1],text=r[0].transcript.trim(),n=text.replace(/\s/g,"");setStatus("認識："+text);if(n.includes("攻撃")||n.includes("こうげき")||n.toLowerCase().includes("attack"))playAttack()};return rec}
-function startMicSafely(){if(!wantMicOn||micLocked||isAttacking){updateButtons();return}recognition=recognition||makeRecognition();if(!recognition)return;try{recognition.start()}catch(e){}updateButtons()}
-startBtn.addEventListener("click",async()=>{ensureAudio();await ensureIdlePlaying();wantMicOn=true;startMicSafely()});
-stopBtn.addEventListener("click",()=>{wantMicOn=false;micLocked=false;clearTimeout(restartTimer);if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}isListening=false;setStatus("マイク停止中。Idle再生中。");updateButtons()});
-attackBtn.addEventListener("click",playAttack);
-fullBtn.addEventListener("click",async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();setStatus("全画面モード")}else await document.exitFullscreen()}catch(e){setStatus("全画面にできませんでした。",true)}});
-mirrorBtn.addEventListener("click",()=>{mirror=mirror===1?-1:1;document.documentElement.style.setProperty("--mirror",mirror);setStatus(mirror===-1?"左右反転ON":"左右反転OFF")});
-fitBtn.addEventListener("click",()=>{fitMode=(fitMode+1)%3;if(fitMode===0){document.documentElement.style.setProperty("--fit","contain");document.documentElement.style.setProperty("--zoom",1);fitBtn.textContent="拡大";setStatus("表示：全体表示")}else if(fitMode===1){document.documentElement.style.setProperty("--fit","cover");document.documentElement.style.setProperty("--zoom",1);fitBtn.textContent="さらに拡大";setStatus("表示：画面いっぱい")}else{document.documentElement.style.setProperty("--fit","cover");document.documentElement.style.setProperty("--zoom",1.18);fitBtn.textContent="等倍";setStatus("表示：迫力重視")}});
-hideBtn.addEventListener("click",()=>{controls.classList.toggle("hidden");hideBtn.textContent=controls.classList.contains("hidden")?"UI戻す":"UI小"});
-document.body.addEventListener("click",async e=>{if(!controls.contains(e.target))controls.classList.toggle("show");await ensureIdlePlaying()});
-if(!window.isSecureContext)setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。",true);
-updateButtons();ensureIdlePlaying();
-</script>
-</body>
-</html>
+function impact(){const c=ensureAudio(),n=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(84,n);o.frequency.exponentialRampToValueAtTime(26,n+.55);g.gain.setValueAtTime(.001,n);g.gain.exponentialRampToValueAtTime(.12,n+.025);g.gain.exponentialRampToValueAtTime(.001,n+.75);o.connect(g).connect(c.destination);o.start(n);o.stop(n+.82)}
+async function ensureIdle(){try{idleVideo.muted=true;idleVideo.loop=true;await idleVideo.play()}catch(e){setStatus("Idle自動再生待ち。画面を一度タップしてください。")}}
+function lockMic(){clearTimeout(restartTimer);micLocked=true;isListening=false;updateButtons();if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}}
+function unlockMic(){clearTimeout(restartTimer);restartTimer=setTimeout(()=>{micLocked=false;isAttacking=false;updateButtons();if(wantMicOn){setStatus("Idleへ戻りました。マイク再開中...");startMic()}else setStatus("Idleへ戻りました。")},800)}
+async function playAttack(){if(isAttacking)return;isAttacking=true;lockMic();impact();setStatus("攻撃発動：Attack動画へ切替");flash.classList.remove("active");void flash.offsetWidth;flash.classList.add("active");try{idleVideo.pause();attackVideo.pause();attackVideo.currentTime=0;stage.classList.add("attacking");attackVideo.muted=false;await attackVideo.play()}catch(e){setStatus("Attack動画を再生できません。画面を一度タップしてから再試行してください。",true);returnIdle()}}
+async function returnIdle(){stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdle();unlockMic()}attackVideo.addEventListener("ended",returnIdle);idleVideo.addEventListener("canplay",ensureIdle);idleVideo.addEventListener("error",()=>setStatus("Idle動画を読めません。",true));attackVideo.addEventListener("error",()=>setStatus("Attack動画を読めません。",true));
+idleBtn.onclick=async()=>{isAttacking=false;micLocked=false;stage.classList.remove("attacking");attackVideo.pause();attackVideo.currentTime=0;await ensureIdle();setStatus("Idle再生中");updateButtons()};
+function makeRec(){if(!SpeechRecognition){setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。",true);startBtn.disabled=true;return null}const r=new SpeechRecognition();r.lang="ja-JP";r.continuous=true;r.interimResults=true;r.onstart=()=>{if(micLocked||isAttacking){try{r.abort()}catch(e){}return}isListening=true;setStatus("聞き取り中：「攻撃！」");updateButtons()};r.onend=()=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;if(wantMicOn){clearTimeout(restartTimer);restartTimer=setTimeout(startMic,600)}else setStatus("マイク停止中。Idle再生中。")};r.onerror=e=>{isListening=false;updateButtons();if(micLocked||isAttacking)return;setStatus("音声認識エラー："+e.error,true)};r.onresult=e=>{if(micLocked||isAttacking)return;const text=e.results[e.results.length-1][0].transcript.trim(),n=text.replace(/\\s/g,"");setStatus("認識："+text);if(n.includes("攻撃")||n.includes("こうげき")||n.toLowerCase().includes("attack"))playAttack()};return r}
+function startMic(){if(!wantMicOn||micLocked||isAttacking){updateButtons();return}recognition=recognition||makeRec();if(!recognition)return;try{recognition.start()}catch(e){}updateButtons()}
+startBtn.onclick=async()=>{ensureAudio();await ensureIdle();wantMicOn=true;startMic()};stopBtn.onclick=()=>{wantMicOn=false;micLocked=false;clearTimeout(restartTimer);if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}isListening=false;setStatus("マイク停止中。Idle再生中。");updateButtons()};attackBtn.onclick=playAttack;
+fullBtn.onclick=async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();setStatus("全画面モード")}else await document.exitFullscreen()}catch(e){setStatus("全画面にできませんでした。",true)}};mirrorBtn.onclick=()=>{mirror=mirror===1?-1:1;css("--mirror",mirror);setStatus(mirror===-1?"左右反転ON":"左右反転OFF")};
+fitBtn.onclick=()=>{fitMode=(fitMode+1)%3;if(fitMode===0){css("--fit","contain");fitBtn.textContent="拡大";setStatus("表示：全体表示")}else if(fitMode===1){css("--fit","cover");fitBtn.textContent="さらに拡大";setStatus("表示：画面いっぱい")}else{css("--fit","cover");fitBtn.textContent="等倍";setStatus("表示：迫力重視")}};
+alignBtn.onclick=()=>{controls.classList.toggle("align");setStatus("攻撃動画だけ補正。攻撃ボタンで確認しながら調整。")};$("leftBtn").onclick=()=>{ax-=5;apply();setStatus(`攻撃X ${ax}px`)};$("rightBtn").onclick=()=>{ax+=5;apply();setStatus(`攻撃X ${ax}px`)};$("upBtn").onclick=()=>{ay-=5;apply();setStatus(`攻撃Y ${ay}px`)};$("downBtn").onclick=()=>{ay+=5;apply();setStatus(`攻撃Y ${ay}px`)};$("zinBtn").onclick=()=>{az=Math.round((az+.02)*100)/100;apply();setStatus(`攻撃 ${Math.round(az*100)}%`)};$("zoutBtn").onclick=()=>{az=Math.max(.8,Math.round((az-.02)*100)/100);apply();setStatus(`攻撃 ${Math.round(az*100)}%`)};$("saveBtn").onclick=save;$("resetBtn").onclick=()=>{ax=0;ay=0;az=1;apply();save()};
+hideBtn.onclick=()=>{controls.classList.toggle("hidden");hideBtn.textContent=controls.classList.contains("hidden")?"UI戻す":"UI小"};document.body.addEventListener("click",async e=>{if(!controls.contains(e.target))controls.classList.toggle("show");await ensureIdle()});if(!window.isSecureContext)setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。",true);updateButtons();ensureIdle();
+</script></body></html>
