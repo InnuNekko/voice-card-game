@@ -3,514 +3,164 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>冥府の先導者 - Attack Motion v6</title>
+  <title>冥府の先導者 - 2.5D Puppet</title>
   <style>
     :root {
-      --ui-bg: rgba(0, 0, 0, 0.50);
-      --ui-border: rgba(255, 255, 255, 0.18);
-      --text: #f7f3e8;
-      --muted: #cfc6b4;
-      --accent: #b78cff;
+      --ui-bg: rgba(0,0,0,.48);
+      --ui-border: rgba(255,255,255,.18);
+      --text: #f7f0ff;
+      --muted: #cbbde5;
+      --scale: 1;
+      --mirror: 1;
     }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      color: var(--text);
+      margin: 0; width: 100%; height: 100%; overflow: hidden;
+      background: #000; color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       touch-action: manipulation;
     }
-
     .stage {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
+      position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden;
       background:
-        radial-gradient(circle at 50% 45%, rgba(85, 35, 130, 0.25), transparent 34%),
+        radial-gradient(circle at 50% 42%, rgba(72, 22, 125, .34), transparent 34%),
+        radial-gradient(circle at 50% 86%, rgba(136, 46, 204, .18), transparent 28%),
         #000;
     }
-
-    video {
-      width: 100vw;
-      height: 100svh;
-      object-fit: var(--fit, contain);
-      opacity: 0;
-      transform: scale(var(--zoom, 1)) scaleX(var(--mirror, 1));
-      filter: contrast(1.05) brightness(1.06) saturate(1.03);
-      transition: opacity 100ms ease;
-      background: #000;
+    .puppet {
+      position: relative;
+      width: min(100vw, calc(100svh * 0.73));
+      aspect-ratio: 1040 / 1424;
+      transform: scale(var(--scale)) scaleX(var(--mirror));
+      transform-origin: 50% 52%;
+      filter: drop-shadow(0 0 18px rgba(132, 63, 255, .55));
     }
-
-    .stage.playing video {
-      opacity: 1;
+    .part {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: contain;
+      user-select: none; pointer-events: none;
+      transform-origin: 50% 50%;
     }
-
-    .idle-title {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      pointer-events: none;
-      opacity: 0.78;
-      transition: opacity 160ms ease;
+    .glow { opacity: .78; mix-blend-mode: screen; animation: glowPulse 3.2s ease-in-out infinite; }
+    .full { animation: bodyIdle 3.8s ease-in-out infinite; transform-origin: 52% 54%; }
+    .cape { opacity: .62; mix-blend-mode: screen; animation: capeIdle 4.5s ease-in-out infinite; transform-origin: 72% 36%; }
+    .hair { opacity: .72; mix-blend-mode: screen; animation: hairIdle 3.2s ease-in-out infinite; transform-origin: 42% 14%; }
+    .sword { opacity: .55; mix-blend-mode: screen; animation: swordIdle 4s ease-in-out infinite; transform-origin: 27% 42%; }
+    .smoke { opacity: .35; mix-blend-mode: screen; animation: smokeIdle 6s ease-in-out infinite; transform-origin: 48% 62%; }
+    .stage.attack .puppet { animation: puppetAttack 950ms cubic-bezier(.2,.8,.2,1) both; }
+    .stage.attack .full { animation: fullAttack 950ms cubic-bezier(.18,.95,.2,1) both; }
+    .stage.attack .sword { opacity: .88; animation: swordAttack 950ms cubic-bezier(.18,.95,.2,1) both; }
+    .stage.attack .cape { opacity: .85; animation: capeAttack 950ms cubic-bezier(.18,.95,.2,1) both; }
+    .stage.attack .hair { opacity: .82; animation: hairAttack 950ms cubic-bezier(.18,.95,.2,1) both; }
+    .stage.attack .smoke { opacity: .7; animation: smokeAttack 950ms ease-out both; }
+    .slash {
+      position: fixed; left: 50%; top: 42%;
+      width: min(84vw, 620px); height: 22px; border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #fff, #e6d6ff, #9d55ff, transparent);
+      filter: drop-shadow(0 0 12px #fff) drop-shadow(0 0 38px #a45cff);
+      opacity: 0; pointer-events: none;
+      transform: translate(-50%, -50%) rotate(-23deg) scaleX(0);
+      z-index: 3;
     }
-
-    .stage.playing .idle-title {
-      opacity: 0;
-    }
-
-    .idle-title h1 {
-      margin: 0 0 10px;
-      font-size: clamp(30px, 8vw, 76px);
-      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
-      letter-spacing: 0.08em;
-      text-shadow: 0 0 28px rgba(190, 130, 255, 0.75);
-    }
-
-    .idle-title p {
-      margin: 0;
-      color: var(--muted);
-      font-size: clamp(14px, 3.3vw, 22px);
-    }
-
+    .stage.attack .slash { animation: slash 650ms ease-out both; }
     .flash {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0;
+      position: fixed; inset: 0; pointer-events: none; opacity: 0;
       background:
-        radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.78), transparent 15%),
-        radial-gradient(circle at 50% 42%, rgba(160, 90, 255, 0.70), transparent 38%);
+        radial-gradient(circle at 50% 40%, rgba(255,255,255,.90), transparent 12%),
+        radial-gradient(circle at 50% 44%, rgba(156,75,255,.78), transparent 34%);
+      z-index: 2;
     }
-
-    .flash.active {
-      animation: flash 520ms ease-out;
+    .stage.attack .flash { animation: flash 620ms ease-out both; }
+    .title {
+      position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 50%;
+      transform: translateX(-50%); z-index: 4; text-align: center; pointer-events: none;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      letter-spacing: .08em; text-shadow: 0 0 22px rgba(180,120,255,.88);
+      font-size: clamp(20px, 5.2vw, 40px); opacity: .86;
     }
-
-    @keyframes flash {
-      0% { opacity: 0; }
-      10% { opacity: 0.90; }
-      24% { opacity: 0.12; }
-      38% { opacity: 0.55; }
-      100% { opacity: 0; }
-    }
-
     .controls {
-      position: fixed;
-      left: 50%;
-      bottom: calc(8px + env(safe-area-inset-bottom));
-      transform: translateX(-50%);
-      width: min(96vw, 820px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 7px;
-      border-radius: 999px;
-      border: 1px solid var(--ui-border);
-      background: var(--ui-bg);
-      backdrop-filter: blur(10px);
-      opacity: 0.42;
-      transition: opacity 160ms ease, transform 160ms ease;
-      z-index: 5;
+      position: fixed; left: 50%; bottom: calc(8px + env(safe-area-inset-bottom));
+      transform: translateX(-50%); width: min(96vw, 880px);
+      display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+      gap: 6px; padding: 7px; border-radius: 999px;
+      border: 1px solid var(--ui-border); background: var(--ui-bg);
+      backdrop-filter: blur(10px); z-index: 5; opacity: .45; transition: .16s;
     }
-
-    .controls:focus-within,
-    .controls.show {
-      opacity: 1;
-    }
-
-    .controls.hidden {
-      opacity: 0.05;
-      transform: translateX(-50%) translateY(18px);
-    }
-
+    .controls:focus-within, .controls.show { opacity: 1; }
+    .controls.hidden { opacity: .05; transform: translateX(-50%) translateY(18px); }
     button {
-      border: 0;
-      border-radius: 999px;
-      padding: 9px 12px;
-      font-size: 12px;
-      font-weight: 900;
-      color: #120d18;
-      background: linear-gradient(180deg, #e7d4ff, #a978ff);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.24);
+      border: 0; border-radius: 999px; padding: 9px 12px;
+      font-size: 12px; font-weight: 900; color: #140b20;
+      background: linear-gradient(180deg, #ead6ff, #aa72ff);
+      box-shadow: 0 4px 14px rgba(0,0,0,.35);
     }
-
-    button:disabled {
-      opacity: 0.45;
-    }
-
+    button:disabled { opacity: .45; }
     .status {
-      width: 100%;
-      min-height: 1.2em;
-      text-align: center;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.25;
-      padding: 0 10px 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      width: 100%; min-height: 1.2em; text-align: center; color: var(--muted);
+      font-size: 11px; line-height: 1.25; padding: 0 10px 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-
-    .danger {
-      color: #ff9d9d;
-      font-weight: 800;
-    }
+    .danger { color: #ff9d9d; font-weight: 800; }
+    @keyframes bodyIdle { 0%,100%{transform:translateY(0) rotate(0deg) scale(1)} 50%{transform:translateY(-1.2%) rotate(.35deg) scale(1.008)} }
+    @keyframes capeIdle { 0%,100%{transform:translate(0,0) rotate(0deg) scale(1);filter:blur(0)} 50%{transform:translate(-1.8%,.8%) rotate(-1.2deg) scale(1.018);filter:blur(.2px)} }
+    @keyframes hairIdle { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-1.4%,.2%) rotate(-1.8deg)} }
+    @keyframes swordIdle { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(.3%,-.4%) rotate(.6deg)} }
+    @keyframes smokeIdle { 0%,100%{transform:translate(0,0) scale(1);opacity:.26} 50%{transform:translate(-2.5%,-1.2%) scale(1.04);opacity:.48} }
+    @keyframes glowPulse { 0%,100%{opacity:.34;transform:scale(1)} 50%{opacity:.75;transform:scale(1.02)} }
+    @keyframes puppetAttack { 0%{transform:scale(var(--scale)) scaleX(var(--mirror)) translateY(0)} 25%{transform:scale(calc(var(--scale)*.96)) scaleX(var(--mirror)) translateY(1.5%)} 50%{transform:scale(calc(var(--scale)*1.12)) scaleX(var(--mirror)) translate(1.5%,-3.2%)} 100%{transform:scale(var(--scale)) scaleX(var(--mirror)) translateY(0)} }
+    @keyframes fullAttack { 0%{transform:translateY(0) rotate(0deg)} 35%{transform:translate(-1%,1%) rotate(-1.8deg)} 58%{transform:translate(3%,-2.5%) rotate(2.4deg)} 100%{transform:translateY(0) rotate(0deg)} }
+    @keyframes swordAttack { 0%{transform:translate(0,0) rotate(0deg) scale(1)} 18%{transform:translate(-3%,2%) rotate(-12deg) scale(1.02)} 48%{transform:translate(8%,-5%) rotate(18deg) scale(1.08)} 72%{transform:translate(1%,0) rotate(4deg) scale(1.02)} 100%{transform:translate(0,0) rotate(0deg) scale(1)} }
+    @keyframes capeAttack { 0%{transform:translate(0,0) rotate(0deg) scale(1)} 40%{transform:translate(-5%,3%) rotate(-5deg) scale(1.06)} 70%{transform:translate(2%,-2%) rotate(2deg) scale(1.03)} 100%{transform:translate(0,0) rotate(0deg) scale(1)} }
+    @keyframes hairAttack { 0%{transform:translate(0,0) rotate(0deg)} 45%{transform:translate(-5%,1%) rotate(-7deg)} 100%{transform:translate(0,0) rotate(0deg)} }
+    @keyframes smokeAttack { 0%{transform:translate(0,0) scale(1);opacity:.32} 48%{transform:translate(-7%,-4%) scale(1.18);opacity:.88} 100%{transform:translate(0,0) scale(1);opacity:.35} }
+    @keyframes slash { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-23deg) scaleX(0)} 12%{opacity:1} 55%{opacity:.95;transform:translate(-50%,-50%) rotate(-23deg) scaleX(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(-23deg) scaleX(1.18)} }
+    @keyframes flash { 0%{opacity:0} 9%{opacity:.9} 24%{opacity:.12} 37%{opacity:.56} 100%{opacity:0} }
   </style>
 </head>
 <body>
   <main class="stage" id="stage">
-    <video id="attackVideo" src="./attack_motion.mp4" preload="auto" playsinline webkit-playsinline></video>
-
-    <section class="idle-title" aria-hidden="true">
-      <div>
-        <h1>冥府の先導者</h1>
-        <p>「攻撃！」で攻撃モーション</p>
-      </div>
-    </section>
-
-    <div class="flash" id="flash"></div>
+    <div class="title">冥府の先導者</div>
+    <div class="puppet" id="puppet">
+      <img class="part glow" src="./meifu_glow.png" alt="">
+      <img class="part smoke" src="./meifu_smoke.png" alt="">
+      <img class="part cape" src="./meifu_cape.png" alt="">
+      <img class="part full" src="./meifu_full.png" alt="冥府の先導者">
+      <img class="part hair" src="./meifu_hair.png" alt="">
+      <img class="part sword" src="./meifu_sword.png" alt="">
+    </div>
+    <div class="slash"></div>
+    <div class="flash"></div>
   </main>
-
   <section class="controls show" id="controls">
-    <div class="status" id="status">v6：動画中はマイクを強制ロックします</div>
+    <div class="status" id="status">2.5D版：マイク開始 → 「攻撃！」 / まず攻撃ボタンで確認</div>
     <button id="startBtn">マイク</button>
     <button id="stopBtn" disabled>停止</button>
-    <button id="testBtn">攻撃</button>
+    <button id="attackBtn">攻撃</button>
     <button id="fullBtn">全画面</button>
     <button id="mirrorBtn">左右反転</button>
-    <button id="fitBtn">拡大</button>
+    <button id="zoomBtn">拡大</button>
     <button id="hideBtn">UI小</button>
   </section>
-
   <script>
-    const stage = document.getElementById("stage");
-    const video = document.getElementById("attackVideo");
-    const flash = document.getElementById("flash");
-    const controls = document.getElementById("controls");
-    const statusEl = document.getElementById("status");
-
-    const startBtn = document.getElementById("startBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const testBtn = document.getElementById("testBtn");
-    const fullBtn = document.getElementById("fullBtn");
-    const mirrorBtn = document.getElementById("mirrorBtn");
-    const fitBtn = document.getElementById("fitBtn");
-    const hideBtn = document.getElementById("hideBtn");
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    let recognition = null;
-    let wantMicOn = false;
-    let isListening = false;
-
-    // これが今回の要：trueの間は、絶対に音声認識を開始しない
-    let micHardLocked = false;
-    let restartTimer = null;
-
-    let isVideoPlaying = false;
-    let audioCtx = null;
-    let mirror = 1;
-    let fitMode = 0;
-
-    function setStatus(text, danger = false) {
-      statusEl.textContent = text;
-      statusEl.className = danger ? "status danger" : "status";
-    }
-
-    function updateButtons() {
-      // ロック中・動画中は停止ボタンをアクティブにしない
-      if (micHardLocked || isVideoPlaying) {
-        startBtn.disabled = true;
-        stopBtn.disabled = true;
-        return;
-      }
-
-      startBtn.disabled = isListening;
-      stopBtn.disabled = !isListening;
-    }
-
-    function ensureAudio() {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      return audioCtx;
-    }
-
-    function impactSound() {
-      const ctx = ensureAudio();
-      const now = ctx.currentTime;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(88, now);
-      osc.frequency.exponentialRampToValueAtTime(28, now + 0.55);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.48, now + 0.025);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.85);
-    }
-
-    function createRecognition() {
-      if (!SpeechRecognition) {
-        setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。", true);
-        startBtn.disabled = true;
-        return null;
-      }
-
-      const rec = new SpeechRecognition();
-      rec.lang = "ja-JP";
-      rec.continuous = true;
-      rec.interimResults = true;
-
-      rec.onstart = () => {
-        // ロック中に勝手に開始された場合、即座に中止する
-        if (micHardLocked || isVideoPlaying) {
-          try { rec.abort(); } catch (e) {}
-          isListening = false;
-          updateButtons();
-          return;
-        }
-
-        isListening = true;
-        setStatus("聞き取り中：「攻撃！」");
-        updateButtons();
-      };
-
-      rec.onend = () => {
-        isListening = false;
-        updateButtons();
-
-        // ロック中・動画中は絶対に再開しない
-        if (micHardLocked || isVideoPlaying) {
-          setStatus("動画再生中：マイク強制停止");
-          return;
-        }
-
-        // 通常時だけ自動再開
-        if (wantMicOn) {
-          clearTimeout(restartTimer);
-          restartTimer = setTimeout(startMicSafely, 600);
-        } else {
-          setStatus("停止中");
-        }
-      };
-
-      rec.onerror = (e) => {
-        isListening = false;
-        updateButtons();
-
-        if (micHardLocked || isVideoPlaying) {
-          return;
-        }
-
-        setStatus("音声認識エラー：" + e.error + "。Chromeのマイク許可を確認してください。", true);
-      };
-
-      rec.onresult = (event) => {
-        if (micHardLocked || isVideoPlaying) return;
-
-        const result = event.results[event.results.length - 1];
-        const text = result[0].transcript.trim();
-        const normalized = text.replace(/\s/g, "");
-        setStatus("認識：" + text);
-
-        if (
-          normalized.includes("攻撃") ||
-          normalized.includes("こうげき") ||
-          normalized.toLowerCase().includes("attack")
-        ) {
-          playAttackFromVoice();
-        }
-      };
-
-      return rec;
-    }
-
-    function startMicSafely() {
-      if (!wantMicOn || micHardLocked || isVideoPlaying) {
-        updateButtons();
-        return;
-      }
-
-      recognition = recognition || createRecognition();
-      if (!recognition) return;
-
-      try {
-        recognition.start();
-      } catch (e) {
-        // すでに開始中などは無視
-      }
-      updateButtons();
-    }
-
-    function abortMicHard() {
-      clearTimeout(restartTimer);
-
-      isListening = false;
-      micHardLocked = true;
-      updateButtons();
-
-      if (recognition) {
-        try { recognition.abort(); } catch (e) {}
-        try { recognition.stop(); } catch (e) {}
-      }
-
-      setStatus("攻撃認識：動画中はマイク完全停止");
-    }
-
-    async function playAttackBase() {
-      if (isVideoPlaying) return;
-
-      isVideoPlaying = true;
-      updateButtons();
-
-      ensureAudio();
-      impactSound();
-
-      flash.classList.remove("active");
-      void flash.offsetWidth;
-      flash.classList.add("active");
-
-      stage.classList.add("playing");
-      video.pause();
-      video.currentTime = 0;
-
-      try {
-        await video.play();
-        setStatus("攻撃発動：冥府の先導者");
-      } catch (e) {
-        isVideoPlaying = false;
-        stage.classList.remove("playing");
-        micHardLocked = false;
-        updateButtons();
-        setStatus("動画再生できません。画面を一度タップしてから再試行してください。", true);
-      }
-    }
-
-    function playAttackFromVoice() {
-      // 音声認識から攻撃した時だけ、強制ロック
-      abortMicHard();
-      playAttackBase();
-    }
-
-    function playAttackFromButton() {
-      // ボタン攻撃はマイクを触らない
-      playAttackBase();
-    }
-
-    video.addEventListener("ended", () => {
-      isVideoPlaying = false;
-      stage.classList.remove("playing");
-
-      // 動画終了後もしばらく待ってからマイクロック解除
-      setStatus("動画終了：1.5秒後にマイク再開");
-      clearTimeout(restartTimer);
-
-      restartTimer = setTimeout(() => {
-        micHardLocked = false;
-        updateButtons();
-
-        if (wantMicOn) {
-          setStatus("マイク再開中...");
-          startMicSafely();
-        } else {
-          setStatus("待機中");
-        }
-      }, 1500);
-    });
-
-    startBtn.addEventListener("click", () => {
-      ensureAudio();
-      wantMicOn = true;
-      micHardLocked = false;
-      startMicSafely();
-    });
-
-    stopBtn.addEventListener("click", () => {
-      wantMicOn = false;
-      micHardLocked = false;
-      clearTimeout(restartTimer);
-      if (recognition) {
-        try { recognition.abort(); } catch (e) {}
-        try { recognition.stop(); } catch (e) {}
-      }
-      isListening = false;
-      updateButtons();
-      setStatus("停止中");
-    });
-
-    testBtn.addEventListener("click", playAttackFromButton);
-
-    fullBtn.addEventListener("click", async () => {
-      try {
-        if (!document.fullscreenElement) {
-          await document.documentElement.requestFullscreen();
-          setStatus("全画面モード");
-        } else {
-          await document.exitFullscreen();
-        }
-      } catch (e) {
-        setStatus("全画面にできませんでした。", true);
-      }
-    });
-
-    mirrorBtn.addEventListener("click", () => {
-      mirror = mirror === 1 ? -1 : 1;
-      video.style.setProperty("--mirror", mirror);
-      setStatus(mirror === -1 ? "左右反転ON" : "左右反転OFF");
-    });
-
-    fitBtn.addEventListener("click", () => {
-      fitMode = (fitMode + 1) % 3;
-      if (fitMode === 0) {
-        video.style.setProperty("--fit", "contain");
-        video.style.setProperty("--zoom", 1);
-        fitBtn.textContent = "拡大";
-        setStatus("表示：全体表示");
-      } else if (fitMode === 1) {
-        video.style.setProperty("--fit", "cover");
-        video.style.setProperty("--zoom", 1);
-        fitBtn.textContent = "さらに拡大";
-        setStatus("表示：画面いっぱい");
-      } else {
-        video.style.setProperty("--fit", "cover");
-        video.style.setProperty("--zoom", 1.18);
-        fitBtn.textContent = "等倍";
-        setStatus("表示：迫力重視");
-      }
-    });
-
-    hideBtn.addEventListener("click", () => {
-      controls.classList.toggle("hidden");
-      hideBtn.textContent = controls.classList.contains("hidden") ? "UI戻す" : "UI小";
-    });
-
-    document.body.addEventListener("click", (e) => {
-      if (!controls.contains(e.target)) {
-        controls.classList.toggle("show");
-      }
-    });
-
-    if (!window.isSecureContext) {
-      setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。", true);
-    }
-
-    updateButtons();
+    const stage=document.getElementById("stage"),controls=document.getElementById("controls"),statusEl=document.getElementById("status");
+    const startBtn=document.getElementById("startBtn"),stopBtn=document.getElementById("stopBtn"),attackBtn=document.getElementById("attackBtn"),fullBtn=document.getElementById("fullBtn"),mirrorBtn=document.getElementById("mirrorBtn"),zoomBtn=document.getElementById("zoomBtn"),hideBtn=document.getElementById("hideBtn");
+    const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    let recognition=null,wantMicOn=false,isListening=false,attackLocked=false,audioCtx=null,mirror=1,zoom=1;
+    function setStatus(t,d=false){statusEl.textContent=t;statusEl.className=d?"status danger":"status"}
+    function updateButtons(){startBtn.disabled=isListening;stopBtn.disabled=!isListening}
+    function ensureAudio(){audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}
+    function attackSound(){const ctx=ensureAudio(),now=ctx.currentTime;const boom=ctx.createOscillator(),boomGain=ctx.createGain();boom.type="sine";boom.frequency.setValueAtTime(92,now);boom.frequency.exponentialRampToValueAtTime(28,now+.55);boomGain.gain.setValueAtTime(.001,now);boomGain.gain.exponentialRampToValueAtTime(.72,now+.025);boomGain.gain.exponentialRampToValueAtTime(.001,now+.85);boom.connect(boomGain).connect(ctx.destination);boom.start(now);boom.stop(now+.9);const dur=.42,n=Math.floor(ctx.sampleRate*dur),buffer=ctx.createBuffer(1,n,ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<n;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();src.buffer=buffer;filter.type="bandpass";filter.frequency.value=1100;filter.Q.value=.85;gain.gain.setValueAtTime(.001,now);gain.gain.exponentialRampToValueAtTime(.34,now+.018);gain.gain.exponentialRampToValueAtTime(.001,now+dur);src.connect(filter).connect(gain).connect(ctx.destination);src.start(now);src.stop(now+dur)}
+    function playAttack(){if(attackLocked)return;attackLocked=true;ensureAudio();attackSound();stage.classList.remove("attack");void stage.offsetWidth;stage.classList.add("attack");setStatus("攻撃発動：冥府の先導者");setTimeout(()=>{stage.classList.remove("attack");attackLocked=false;setStatus(wantMicOn?"聞き取り中：「攻撃！」":"待機中")},1050)}
+    function makeRecognition(){if(!SpeechRecognition){setStatus("このブラウザは音声認識に未対応です。Android Chrome推奨です。",true);startBtn.disabled=true;return null}const rec=new SpeechRecognition();rec.lang="ja-JP";rec.continuous=true;rec.interimResults=true;rec.onstart=()=>{isListening=true;setStatus("聞き取り中：「攻撃！」");updateButtons()};rec.onend=()=>{isListening=false;updateButtons();if(wantMicOn){setTimeout(()=>{if(!wantMicOn)return;try{rec.start()}catch(e){}},500)}else setStatus("停止中")};rec.onerror=e=>{isListening=false;updateButtons();setStatus("音声認識エラー："+e.error+"。Chromeのマイク許可を確認してください。",true)};rec.onresult=e=>{const result=e.results[e.results.length-1],text=result[0].transcript.trim(),normalized=text.replace(/\s/g,"");setStatus("認識："+text);if(normalized.includes("攻撃")||normalized.includes("こうげき")||normalized.toLowerCase().includes("attack"))playAttack()};return rec}
+    startBtn.addEventListener("click",()=>{ensureAudio();wantMicOn=true;recognition=recognition||makeRecognition();try{recognition&&recognition.start()}catch(e){}});
+    stopBtn.addEventListener("click",()=>{wantMicOn=false;if(recognition){try{recognition.abort()}catch(e){}try{recognition.stop()}catch(e){}}isListening=false;updateButtons();setStatus("停止中")});
+    attackBtn.addEventListener("click",playAttack);
+    fullBtn.addEventListener("click",async()=>{try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();setStatus("全画面モード")}else await document.exitFullscreen()}catch(e){setStatus("全画面にできませんでした。",true)}});
+    mirrorBtn.addEventListener("click",()=>{mirror=mirror===1?-1:1;document.documentElement.style.setProperty("--mirror",mirror);setStatus(mirror===-1?"左右反転ON":"左右反転OFF")});
+    zoomBtn.addEventListener("click",()=>{zoom=zoom===1?1.12:zoom===1.12?1.28:1;document.documentElement.style.setProperty("--scale",zoom);zoomBtn.textContent=zoom===1?"拡大":zoom===1.12?"さらに拡大":"等倍";setStatus("表示サイズ："+Math.round(zoom*100)+"%")});
+    hideBtn.addEventListener("click",()=>{controls.classList.toggle("hidden");hideBtn.textContent=controls.classList.contains("hidden")?"UI戻す":"UI小"});
+    document.body.addEventListener("click",e=>{if(!controls.contains(e.target))controls.classList.toggle("show")});
+    if(!window.isSecureContext)setStatus("注意：GitHub PagesのURLで開くとマイクが安定します。",true);updateButtons();
   </script>
 </body>
 </html>
